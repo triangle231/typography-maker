@@ -838,11 +838,18 @@
               </select>
             </div>
           </div>
-          <!-- 채우기 전용 속성 (텍스트와 도형과 달리 색상만 선택) -->
           <div class="fill-properties" style="display: none;">
             <div class="setting-group">
               <div class="setting-label"><i class="fa-solid fa-fill-drip"></i> 채우기 색상</div>
               <input type="color" id="fillColor" value="#ffffff" />
+            </div>
+            <div class="setting-group">
+              <div class="setting-label"><i class="fa-solid fa-clock"></i> 시작 시간</div>
+              <input type="number" id="fillStartTime" value="0" step="0.01" />
+            </div>
+            <div class="setting-group">
+              <div class="setting-label"><i class="fa-solid fa-stopwatch"></i> 종료 시간</div>
+              <input type="number" id="fillEndTime" value="5" step="0.01" />
             </div>
           </div>
           <!-- 공통 속성 (텍스트, 도형 클립에 적용 – 채우기는 숨김) -->
@@ -951,6 +958,9 @@
       let isPlaying = false;
       let currentTime = 0;
       let lastTimestamp = 0;
+      let copiedClipData = null;
+      let undoStack = [];
+      let redoStack = [];
       let totalDuration = 300; // 최대 시간(초)
       const PIXELS_PER_SECOND = 50;
       let trackList = Array.from(document.querySelectorAll('.timeline-body .track'));
@@ -1281,9 +1291,127 @@
         }
         return true;
       }
-      // 클립 추가 (타입: "text", "rectangle", "circle", "fill")
+      function saveState() {
+        const state = {
+          clipsData: JSON.parse(JSON.stringify(clipsData)),
+          currentTime: currentTime,
+          totalDuration: totalDuration
+        };
+        undoStack.push(state);
+        // 새로운 작업이 발생하면 redoStack은 비워둡니다.
+        redoStack = [];
+      }
+
+      /**
+       * 저장된 상태(state)를 복원합니다.
+       * (타임라인의 모든 트랙과 클립 DOM을 제거한 후 state.clipsData를 기준으로 다시 생성)
+       */
+      function restoreState(state) {
+        const timelineBody = document.getElementById('timelineBody');
+        // 기존 트랙 DOM 제거
+        timelineBody.querySelectorAll('.track').forEach(track => track.remove());
+        trackList = [];
+        // 기존 클립 데이터 초기화
+        clipsData = {};
+        currentTime = state.currentTime;
+        totalDuration = state.totalDuration;
+
+        // state.clipsData에 저장된 모든 클립을 순회하며 다시 생성
+        for (let cid in state.clipsData) {
+          let clip = state.clipsData[cid];
+          // 해당 클립의 trackIndex에 맞는 트랙이 없으면 생성
+          while (trackList.length < clip.trackIndex) {
+            createTrack();
+          }
+          let newClipDom = createClipDom(cid, clip.startTime, clip.endTime, clip.type);
+          trackList[clip.trackIndex - 1].appendChild(newClipDom);
+          clipsData[cid] = clip;
+        }
+        updatePreview(currentTime);
+        updateTimeIndicator();
+        deselectClip();
+      }
+
+      // ── 키보드 단축키 (Ctrl+C, Ctrl+V, Ctrl+Z, Ctrl+Y) ──
+      document.addEventListener('keydown', function (e) {
+        // 입력창(Input/Textarea) 안에서는 단축키가 작동하지 않도록 함
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        // Ctrl+C : 선택된 클립 복사
+        if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+          if (selectedClip) {
+            copiedClipData = JSON.parse(JSON.stringify(clipsData[selectedClip.id]));
+            console.log("클립 복사됨:", copiedClipData);
+            e.preventDefault();
+          }
+        }
+        // Ctrl+V : 복사된 클립 붙여넣기
+        else if (e.ctrlKey && e.key.toLowerCase() === 'v') {
+          if (copiedClipData) {
+            // 붙여넣기 전 현재 상태를 저장
+            saveState();
+            let offset = 0.5; // 붙여넣기 시 원본과 겹치지 않도록 약간의 시간 오프셋 (0.5초)
+            let duration = copiedClipData.endTime - copiedClipData.startTime;
+            let newId = 'clip-' + Math.random().toString(36).substr(2, 9);
+            let newClipData = JSON.parse(JSON.stringify(copiedClipData));
+            newClipData.id = newId;
+            if (selectedClip) {
+              // 선택된 클립이 있다면 같은 트랙에 붙여넣기
+              newClipData.trackIndex = clipsData[selectedClip.id].trackIndex;
+              newClipData.startTime = copiedClipData.startTime + offset;
+              newClipData.endTime = newClipData.startTime + duration;
+            } else {
+              // 선택된 클립이 없다면, 첫 번째 트랙(없으면 새로 생성)과 현재 재생시간을 기준으로 붙여넣기
+              if (trackList.length === 0) {
+                createTrack();
+              }
+              newClipData.trackIndex = 1;
+              newClipData.startTime = currentTime + offset;
+              newClipData.endTime = newClipData.startTime + duration;
+            }
+            let newClipDom = createClipDom(newId, newClipData.startTime, newClipData.endTime, newClipData.type);
+            if (trackList[newClipData.trackIndex - 1]) {
+              trackList[newClipData.trackIndex - 1].appendChild(newClipDom);
+            }
+            clipsData[newId] = newClipData;
+            selectClip(newClipDom);
+            e.preventDefault();
+          }
+        }
+        // Ctrl+Z : Undo (마지막 상태로 복원)
+        else if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+          if (undoStack.length > 0) {
+            let lastState = undoStack.pop();
+            // 현재 상태를 redoStack에 저장
+            let currentState = {
+              clipsData: JSON.parse(JSON.stringify(clipsData)),
+              currentTime: currentTime,
+              totalDuration: totalDuration
+            };
+            redoStack.push(currentState);
+            restoreState(lastState);
+            e.preventDefault();
+          }
+        }
+        // Ctrl+Y : Redo (undo한 상태를 다시 복원)
+        else if (e.ctrlKey && e.key.toLowerCase() === 'y') {
+          if (redoStack.length > 0) {
+            let nextState = redoStack.pop();
+            let currentState = {
+              clipsData: JSON.parse(JSON.stringify(clipsData)),
+              currentTime: currentTime,
+              totalDuration: totalDuration
+            };
+            undoStack.push(currentState);
+            restoreState(nextState);
+            e.preventDefault();
+          }
+        }
+      });
       function onAddClip(type) {
-        const st = 0, ed = 5;
+        const timelineBody = document.getElementById('timelineBody');
+        const st = timelineBody.scrollLeft / PIXELS_PER_SECOND;
+        const ed = st + 5;
         let tIndex = findAvailableTrack(st, ed);
         if (!tIndex) {
           createTrack();
@@ -1291,6 +1419,7 @@
         }
         addClipToTrack(tIndex, st, ed, type);
       }
+
       function onAddText() {
         onAddClip("text");
       }
@@ -1393,40 +1522,6 @@
         });
         return clipDom;
       }
-      function showClipContextMenu(e, clipDom) {
-        e.preventDefault();
-        removeExistingClipContextMenus();
-        let menu = document.createElement('div');
-        menu.className = 'clip-context-menu';
-        menu.style.left = e.pageX + 'px';
-        menu.style.top = e.pageY + 'px';
-        let deleteOption = document.createElement('div');
-        deleteOption.innerText = '클립 삭제';
-        deleteOption.addEventListener('click', function () {
-          if (clipDom.parentNode) {
-            clipDom.parentNode.removeChild(clipDom);
-          }
-          delete clipsData[clipDom.id];
-          if (selectedClip && selectedClip.id === clipDom.id) {
-            selectedClip = null;
-            updatePropertiesPanel();
-          }
-          if (document.body.contains(menu)) {
-            document.body.removeChild(menu);
-          }
-        });
-        menu.appendChild(deleteOption);
-        document.body.appendChild(menu);
-        document.addEventListener('click', function handler() {
-          if (document.body.contains(menu)) {
-            document.body.removeChild(menu);
-          }
-        }, { once: true });
-      }
-      function removeExistingClipContextMenus() {
-        const existing = document.querySelectorAll('.clip-context-menu');
-        existing.forEach(menu => menu.remove());
-      }
       function updateStyleButtons() {
         if (!selectedClip) return;
         const cdata = clipsData[selectedClip.id];
@@ -1481,8 +1576,7 @@
           document.getElementById('textContent').value = cdata.content;
           document.getElementById('fontFamily').value = cdata.fontFamily;
           document.getElementById('textColor').value = cdata.textColor;
-          document.getElementById('bgColor').value = cdata.backgroundColor === "transparent" ? "#000000" : cdata.backgroundColor;
-          // 배경 투명 체크박스 업데이트
+          document.getElementById('bgColor').value = (cdata.backgroundColor === "transparent") ? "#000000" : cdata.backgroundColor;
           const bgTransChk = document.getElementById('bgTransparent');
           bgTransChk.checked = (cdata.backgroundColor === "transparent");
           document.getElementById('bgColor').disabled = bgTransChk.checked;
@@ -1496,6 +1590,9 @@
           shapeProperties.style.display = "none";
           fillProperties.style.display = "block";
           document.getElementById('fillColor').value = cdata.fillColor;
+          // 새로 추가한 채우기 전용 시간 입력란에 값 반영
+          document.getElementById('fillStartTime').value = cdata.startTime;
+          document.getElementById('fillEndTime').value = cdata.endTime;
           document.getElementById('commonProperties').style.display = "none";
           return;
         } else {
@@ -1558,6 +1655,20 @@
         cdata.ease.scale = document.getElementById('easeScale').value;
         cdata.ease.rotation = document.getElementById('easeRotation').value;
         updateAllGraphs();
+        updatePreview(currentTime);
+      }
+      function onFillTimeChange() {
+        if (!selectedClip) return;
+        const cdata = clipsData[selectedClip.id];
+        if (cdata.type !== "fill") return;
+        let st = parseFloat(document.getElementById('fillStartTime').value) || 0;
+        let ed = parseFloat(document.getElementById('fillEndTime').value) || (st + 1);
+        // (원하는 경우 두 값의 유효성 검사를 추가)
+        cdata.startTime = st;
+        cdata.endTime = ed;
+        // 타임라인에서 clip DOM의 left와 width 갱신
+        selectedClip.style.left = (st * PIXELS_PER_SECOND) + 'px';
+        selectedClip.style.width = ((ed - st) * PIXELS_PER_SECOND) + 'px';
         updatePreview(currentTime);
       }
       function onFontFamilyChange() {
@@ -1724,14 +1835,76 @@
           }
         });
         return leftBound;
-      }
-      function showClipContextMenu(e, clipDom) {
+      } function showClipContextMenu(e, clipDom) {
         e.preventDefault();
-        removeExistingClipContextMenus();
+        removeExistingClipContextMenus(); // 기존 메뉴 제거
+
         let menu = document.createElement('div');
         menu.className = 'clip-context-menu';
         menu.style.left = e.pageX + 'px';
         menu.style.top = e.pageY + 'px';
+
+        // [잘라내기] 옵션: 클립을 복사한 후 원본 삭제
+        let cutOption = document.createElement('div');
+        cutOption.innerText = '잘라내기';
+        cutOption.addEventListener('click', function () {
+          // 클립 데이터를 복제하여 복사 변수에 저장
+          copiedClipData = JSON.parse(JSON.stringify(clipsData[clipDom.id]));
+          // 클립 삭제 처리
+          if (clipDom.parentNode) {
+            clipDom.parentNode.removeChild(clipDom);
+          }
+          delete clipsData[clipDom.id];
+          if (selectedClip && selectedClip.id === clipDom.id) {
+            selectedClip = null;
+            updatePropertiesPanel();
+          }
+          if (document.body.contains(menu)) {
+            document.body.removeChild(menu);
+          }
+        });
+        menu.appendChild(cutOption);
+
+        // [복사] 옵션: 클립 데이터를 복제하여 복사 변수에 저장
+        let copyOption = document.createElement('div');
+        copyOption.innerText = '복사';
+        copyOption.addEventListener('click', function () {
+          copiedClipData = JSON.parse(JSON.stringify(clipsData[clipDom.id]));
+          if (document.body.contains(menu)) {
+            document.body.removeChild(menu);
+          }
+        });
+        menu.appendChild(copyOption);
+
+        // [붙여넣기] 옵션: 저장된 클립 데이터를 복원하여 붙여넣기
+        let pasteOption = document.createElement('div');
+        pasteOption.innerText = '붙여넣기';
+        pasteOption.addEventListener('click', function () {
+          if (copiedClipData) {
+            // 새 클립 ID 생성
+            let newId = 'clip-' + Math.random().toString(36).substr(2, 9);
+            // 복사된 데이터를 deep copy하여 새 클립 데이터로 사용
+            let newClipData = JSON.parse(JSON.stringify(copiedClipData));
+            newClipData.id = newId;
+            // 원본 클립과 겹치지 않도록 약간의 오프셋(예: 0.5초)을 더함
+            let offset = 0.5;
+            newClipData.startTime += offset;
+            newClipData.endTime += offset;
+            // 새 클립 DOM 생성 (createClipDom 함수 사용)
+            let newClipDom = createClipDom(newId, newClipData.startTime, newClipData.endTime, newClipData.type);
+            // 동일한 트랙에 붙여넣기 (트랙 번호는 newClipData.trackIndex)
+            if (trackList[newClipData.trackIndex - 1]) {
+              trackList[newClipData.trackIndex - 1].appendChild(newClipDom);
+            }
+            clipsData[newId] = newClipData;
+          }
+          if (document.body.contains(menu)) {
+            document.body.removeChild(menu);
+          }
+        });
+        menu.appendChild(pasteOption);
+
+        // [클립 삭제] 옵션 (기존 삭제 기능)
         let deleteOption = document.createElement('div');
         deleteOption.innerText = '클립 삭제';
         deleteOption.addEventListener('click', function () {
@@ -1748,7 +1921,9 @@
           }
         });
         menu.appendChild(deleteOption);
+
         document.body.appendChild(menu);
+        // 메뉴 외부 클릭 시 메뉴를 숨깁니다.
         document.addEventListener('click', function handler() {
           if (document.body.contains(menu)) {
             document.body.removeChild(menu);
@@ -2649,6 +2824,100 @@
       });
 
       window.addEventListener('DOMContentLoaded', () => {
+        // 타임라인 배경(빈 영역) 우클릭 시 붙여넣기 메뉴 표시
+        document.getElementById('timelineBody').addEventListener('contextmenu', function (e) {
+          // 이미 클립 요소 위에서 우클릭한 경우(클립의 컨텍스트 메뉴가 있으면) 무시
+          if (e.target.closest('.clip')) return;
+
+          e.preventDefault();
+
+          // 기존 타임라인 컨텍스트 메뉴가 있다면 제거
+          let existingMenu = document.getElementById('timelineContextMenu');
+          if (existingMenu) {
+            existingMenu.remove();
+          }
+
+          // 타임라인 컨텍스트 메뉴 생성 (스타일은 기존 clip-context-menu와 유사하게)
+          let menu = document.createElement('div');
+          menu.id = 'timelineContextMenu';
+          menu.style.position = 'absolute';
+          menu.style.backgroundColor = '#444';
+          menu.style.border = '1px solid #666';
+          menu.style.padding = '4px';
+          menu.style.zIndex = '9999';
+
+          // 복사된 클립 데이터(copiedClipData)가 있으면 붙여넣기 옵션 추가
+          if (copiedClipData) {
+            let pasteOption = document.createElement('div');
+            pasteOption.innerText = '붙여넣기';
+            pasteOption.style.padding = '4px 12px';
+            pasteOption.style.cursor = 'pointer';
+            pasteOption.addEventListener('click', function () {
+              // 타임라인의 클릭 위치에 해당하는 시간 계산
+              const timelineBody = document.getElementById('timelineBody');
+              const rect = timelineBody.getBoundingClientRect();
+              // timelineBody는 스크롤이 있을 수 있으므로 scrollLeft를 고려
+              const clickX = e.clientX - rect.left + timelineBody.scrollLeft;
+              let pasteTime = clickX / PIXELS_PER_SECOND;  // PIXELS_PER_SECOND는 기존에 정의된 시간-픽셀 변환 상수
+
+              // 복사한 클립 데이터를 deep copy하여 새 클립 데이터 생성
+              let newId = 'clip-' + Math.random().toString(36).substr(2, 9);
+              let newClipData = JSON.parse(JSON.stringify(copiedClipData));
+              newClipData.id = newId;
+              // 원본 클립과 겹치지 않도록 약간의 오프셋(예, 0.5초)을 더합니다.
+              let offset = 0.5;
+              let duration = newClipData.endTime - newClipData.startTime;
+              newClipData.startTime = pasteTime + offset;
+              newClipData.endTime = newClipData.startTime + duration;
+
+              // 우클릭한 위치가 속한 트랙(요소)이 있다면 해당 트랙에 붙여넣고,
+              // 없다면 첫 번째 트랙을 사용(없으면 새 트랙 생성)
+              let targetTrack = e.target.closest('.track');
+              if (!targetTrack) {
+                if (trackList.length > 0) {
+                  targetTrack = trackList[0];
+                  newClipData.trackIndex = 1;
+                } else {
+                  createTrack();
+                  targetTrack = trackList[0];
+                  newClipData.trackIndex = 1;
+                }
+              } else {
+                newClipData.trackIndex = trackList.indexOf(targetTrack) + 1;
+              }
+
+              // 새 클립 DOM 생성 후 트랙에 추가
+              let newClipDom = createClipDom(newId, newClipData.startTime, newClipData.endTime, newClipData.type);
+              targetTrack.appendChild(newClipDom);
+              clipsData[newId] = newClipData;
+
+              // 메뉴 제거
+              if (document.body.contains(menu)) {
+                menu.remove();
+              }
+            });
+            menu.appendChild(pasteOption);
+          } else {
+            // 붙여넣기 가능한 클립 데이터가 없으면 안내 문구 표시
+            let noOption = document.createElement('div');
+            noOption.innerText = '붙여넣기 없음';
+            noOption.style.padding = '4px 12px';
+            menu.appendChild(noOption);
+          }
+
+          // 메뉴 위치를 마우스 우클릭 좌표에 맞춤
+          menu.style.left = e.pageX + 'px';
+          menu.style.top = e.pageY + 'px';
+
+          document.body.appendChild(menu);
+
+          // 다른 곳 클릭 시 메뉴 제거
+          document.addEventListener('click', function handler() {
+            if (document.body.contains(menu)) {
+              menu.remove();
+            }
+          }, { once: true });
+        });
         document.getElementById('addTextBtn').addEventListener('click', onAddText);
         document.getElementById('addRectBtn').addEventListener('click', onAddRect);
         document.getElementById('addCircleBtn').addEventListener('click', onAddCircle);
@@ -2688,6 +2957,8 @@
         document.getElementById('shapeColor').addEventListener('change', onShapeColorChange);
         // 채우기 색상 변경 이벤트 추가
         document.getElementById('fillColor').addEventListener('input', onPropChange);
+        document.getElementById('fillStartTime').addEventListener('input', onFillTimeChange);
+        document.getElementById('fillEndTime').addEventListener('input', onFillTimeChange);
         document.getElementById('bgMusicAdd').addEventListener('click', function (e) {
           document.getElementById('bgMusicInput').click();
         });
