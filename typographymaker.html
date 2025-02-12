@@ -2305,8 +2305,10 @@
         if (draggingTimeIndicator) {
           const timelineBody = document.getElementById('timelineBody');
           const rect = timelineBody.getBoundingClientRect();
-          let newX = e.clientX - rect.left - timeIndicatorOffsetX;
-          newX = clamp(newX, 0, timelineBody.clientWidth);
+          // scrollLeft를 더해 컨텐츠 내의 정확한 좌표를 계산
+          let newX = e.clientX - rect.left + timelineBody.scrollLeft - timeIndicatorOffsetX;
+          // 전체 컨텐츠 너비(timelineBody.scrollWidth)를 기준으로 clmap 처리
+          newX = clamp(newX, 0, timelineBody.scrollWidth);
           currentTime = newX / PIXELS_PER_SECOND;
           updateTimeIndicator();
           document.getElementById('currentTimeLabel').innerText = currentTime.toFixed(2);
