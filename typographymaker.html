@@ -1991,6 +1991,10 @@
         }
       }
 
+      setInterval(function() {
+        updatePreview(currentTime);
+      }, 300);
+
       function updateLoop(timestamp) {
         if (!isPlaying) return;
         const delta = (timestamp - lastTimestamp) / 1000;
