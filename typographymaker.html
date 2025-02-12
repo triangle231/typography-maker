@@ -2356,9 +2356,9 @@
         document.getElementById('bgMusicAdd').addEventListener('click', function (e) {
           document.getElementById('bgMusicInput').click();
         });
-        document.getElementById('previewBgColor').addEventListener('change', function(e) {
-          const color = e.target.value;
-          document.querySelector('#preview .preview-content').style.backgroundColor = color;
+        const previewBgInput = document.getElementById('previewBgColor');
+        previewBgInput.addEventListener('input', function (e) {
+          document.querySelector('#preview .preview-content').style.backgroundColor = e.target.value;
         });
         document.getElementById('bgMusicInput').addEventListener('change', function (e) {
           const file = e.target.files[0];
