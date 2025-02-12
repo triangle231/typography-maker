@@ -2041,8 +2041,8 @@
               "|" + clip.strikethrough +
               "|" + clip.textColor +
               "|" + clip.backgroundColor +
-              "|" + Math.floor(clip.startTime) +
-              "|" + Math.floor(clip.endTime) +
+              "|" + (Math.round(clip.startTime * 100000) / 100000) +
+              "|" + (Math.round(clip.endTime * 100000) / 100000) +
               "|" + clip.ease.posX +
               "|" + clip.posX[0].value +
               "|" + clip.posX[clip.posX.length - 1].value +
@@ -2060,8 +2060,8 @@
             let colorName = shapeColorNameMap[clip.shapeColor] || clip.shapeColor;
             let line = "사각형" +
               "|" + colorName +
-              "|" + Math.floor(clip.startTime) +
-              "|" + Math.floor(clip.endTime) +
+              "|" + (Math.round(clip.startTime * 100000) / 100000) +
+              "|" + (Math.round(clip.endTime * 100000) / 100000) +
               "|" + clip.ease.posX +
               "|" + clip.posX[0].value +
               "|" + clip.posX[clip.posX.length - 1].value +
@@ -2079,8 +2079,8 @@
             let colorName = shapeColorNameMap[clip.shapeColor] || clip.shapeColor;
             let line = "원" +
               "|" + colorName +
-              "|" + Math.floor(clip.startTime) +
-              "|" + Math.floor(clip.endTime) +
+              "|" + (Math.round(clip.startTime * 100000) / 100000) +
+              "|" + (Math.round(clip.endTime * 100000) / 100000) +
               "|" + clip.ease.posX +
               "|" + clip.posX[0].value +
               "|" + clip.posX[clip.posX.length - 1].value +
@@ -2096,8 +2096,8 @@
             lines.push(line);
           } else if (clip.type === "fill") {
             let line = "채우기" +
-              "|" + Math.floor(clip.startTime) +
-              "|" + Math.floor(clip.endTime) +
+              "|" + (Math.round(clip.startTime * 100000) / 100000) +
+              "|" + (Math.round(clip.endTime * 100000) / 100000) +
               "|" + clip.fillColor;
             lines.push(line);
           }
