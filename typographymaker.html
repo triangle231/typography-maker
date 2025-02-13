@@ -4119,8 +4119,10 @@
                                     ]
                             ).join("");
                             projectJSON.variables[19].array = typoArrayData;
-                            projectJSON.objects[0].sprite.sounds[0].duration =
-                                bgAudio.duration;
+                            if (bgAudio != null) {
+                                projectJSON.objects[0].sprite.sounds[0].duration =
+                                    bgAudio.duration;
+                            }
                             projectJSON.objects[0].sprite.sounds[0].filename =
                                 audioFileName;
                             projectJSON.objects[0].sprite.sounds[0].fileurl = `temp/${audioFileName.slice(
