@@ -1,1 +1,1 @@
-# typography-maker
+# typography-maker (support entry file)
