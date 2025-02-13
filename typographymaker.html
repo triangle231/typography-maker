@@ -1132,6 +1132,10 @@
                 <button id="exportFile" style="margin-bottom: 10px">
                     파일로 내보내기
                 </button>
+                <span
+                    >mp3 외의 포멧은 오프라인 엔트리에서만 재생할 수
+                    있습니다</span
+                >
                 <pre id="exportCode"></pre>
             </div>
         </div>
@@ -1190,8 +1194,8 @@
                 let clipResizeLeftOrigWidth = 0;
                 let clipResizeLeftStartX = 0;
                 let _graphDragInfo = null;
-                // 배경음악을 위한 변수 (내보내기/불러오기 데이터에 포함하지 않음)
                 let bgAudio = null;
+                let bgAudioBlob = null;
                 deselectClip();
 
                 // 전역 변수로 회전 드래그 관련 데이터를 저장
@@ -1902,10 +1906,10 @@
                         label = "채우기";
                     }
                     clipDom.innerHTML = `
-              <div class="clip-handle-l"></div>
-              <div class="clip-label">${label}</div>
-              <div class="clip-handle-r"></div>
-            `;
+                          <div class="clip-handle-l"></div>
+                          <div class="clip-label">${label}</div>
+                          <div class="clip-handle-r"></div>
+                        `;
                     clipDom.addEventListener("mousedown", onClipMouseDown);
                     clipDom
                         .querySelector(".clip-handle-r")
@@ -3255,16 +3259,16 @@
                     if (isPlaying) {
                         btn.title = "일시정지";
                         btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-              </svg>`;
+                          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                          </svg>`;
                     } else {
                         btn.title = "재생";
                         btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-              </svg>`;
+                          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                          </svg>`;
                     }
                 }
 
@@ -4047,6 +4051,7 @@
                                     bgAudio.pause();
                                 }
                                 bgAudio = new Audio(URL.createObjectURL(file));
+                                bgAudioBlob = file;
                                 bgAudio.load();
                                 bgAudio.currentTime = currentTime;
                                 if (isPlaying) {
@@ -4102,8 +4107,23 @@
                             const projectJSON = await fetch(
                                 "project.json"
                             ).then((res) => res.json());
+                            let audioFileName =
+                                new Date().getTime() +
+                                parseInt(Math.random() * 100);
                             projectJSON.variables[19].array = typoArrayData;
+                            projectJSON.objects[0].sprite.sounds[0].duration =
+                                bgAudio.duration;
+                            projectJSON.objects[0].sprite.sounds[0].filename =
+                                audioFileName;
+                            projectJSON.objects[0].sprite.sounds[0].fileurl = `temp/audio/sound/${audioFileName}.mp3`;
                             let tar = new tarball.TarWriter();
+                            tar.addFile(
+                                `temp/audio/sound/${audioFileName}.mp3`,
+                                new File(
+                                    [bgAudioBlob],
+                                    `temp/audio/sound/${audioFileName}.mp3`
+                                )
+                            );
                             tar.addFile(
                                 "temp/project.json",
                                 new File(
