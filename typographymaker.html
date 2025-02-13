@@ -4107,21 +4107,47 @@
                             const projectJSON = await fetch(
                                 "project.json"
                             ).then((res) => res.json());
-                            let audioFileName =
-                                new Date().getTime() +
-                                parseInt(Math.random() * 100);
+                            let audioFileName = Array.from(
+                                { length: 32 },
+                                () =>
+                                    "abcdefghijklmnopqrstuvwxyz0123456789"[
+                                        Math.floor(
+                                            Math.random() *
+                                                "abcdefghijklmnopqrstuvwxyz0123456789"
+                                                    .length
+                                        )
+                                    ]
+                            ).join("");
                             projectJSON.variables[19].array = typoArrayData;
                             projectJSON.objects[0].sprite.sounds[0].duration =
                                 bgAudio.duration;
                             projectJSON.objects[0].sprite.sounds[0].filename =
                                 audioFileName;
-                            projectJSON.objects[0].sprite.sounds[0].fileurl = `temp/audio/sound/${audioFileName}.mp3`;
+                            projectJSON.objects[0].sprite.sounds[0].fileurl = `temp/${audioFileName.slice(
+                                0,
+                                2
+                            )}/${audioFileName.slice(
+                                2,
+                                4
+                            )}/sound/${audioFileName}.mp3`;
                             let tar = new tarball.TarWriter();
                             tar.addFile(
-                                `temp/audio/sound/${audioFileName}.mp3`,
+                                `temp/${audioFileName.slice(
+                                    0,
+                                    2
+                                )}/${audioFileName.slice(
+                                    2,
+                                    4
+                                )}/sound/${audioFileName}.mp3`,
                                 new File(
                                     [bgAudioBlob],
-                                    `temp/audio/sound/${audioFileName}.mp3`
+                                    `temp/${audioFileName.slice(
+                                        0,
+                                        2
+                                    )}/${audioFileName.slice(
+                                        2,
+                                        4
+                                    )}/sound/${audioFileName}.mp3`
                                 )
                             );
                             tar.addFile(
