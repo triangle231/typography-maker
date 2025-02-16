@@ -4145,8 +4145,8 @@
                             )
                         );
                         // 내보내기(Export) 이벤트 핸들러 내부(기존 mp3 관련 코드 이후)에 아래 코드를 추가합니다.
-                        if (!projectJSON.objects[0].sprite.pictures) {
-                            projectJSON.objects[0].sprite.pictures = [];
+                        if (!projectJSON.objects[1].sprite.pictures) {
+                            projectJSON.objects[1].sprite.pictures = [];
                         }
                         for (let cid in clipsData) {
                             let clip = clipsData[cid];
@@ -4157,7 +4157,7 @@
                                     Math.floor(Math.random() * "abcdefghijklmnopqrstuvwxyz0123456789".length)
                                     ]
                                 ).join("");
-                                projectJSON.objects[0].sprite.pictures.push({
+                                projectJSON.objects[1].sprite.pictures.push({
                                     "fileurl": ``,
                                     "dimension": {
                                         "width": 960,
