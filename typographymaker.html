@@ -4154,7 +4154,6 @@
                                     ]
                                 ).join("");
                                 projectJSON.objects[0].sprite.pictures.push({
-                                    "id": clip.id, // ... (클립 id로 채움)
                                     "dimension": {
                                         "width": 960,
                                         "height": 540,
@@ -4162,9 +4161,8 @@
                                         "scaleY": 0.5
                                     },
                                     "fileurl": ``, // ...
-                                    "name": clip.imageFile.name, // ... (업로드한 파일 이름)
+                                    "filename": imageFileName, // ... (업로드한 파일 이름)
                                     "imageType": "png",
-                                    "thumbUrl": `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png` // ...
                                 });
                                 tar.addFile(
                                     `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png`,
