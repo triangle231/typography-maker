@@ -1056,6 +1056,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- 스크립트 -->
     <script>
+        console.log("test1")
         (function () {
             let isPlaying = false;
             let currentTime = 0;
@@ -4159,7 +4160,14 @@
                                 ).join("");
                                 projectJSON.objects[0].sprite.pictures.push({
                                     "fileurl": ``,
+                                    "dimension": {
+                                        "width": 960,
+                                        "height": 540,
+                                        "scaleX": 0.5,
+                                        "scaleY": 0.5
+                                    },
                                     "filename": imageFileName,
+                                    "name": clip.imageFile.name,
                                     "imageType": "png",
                                 });
                                 tar.addFile(
