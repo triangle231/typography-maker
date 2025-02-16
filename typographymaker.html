@@ -685,7 +685,8 @@
         }
 
         #addFillBtn i {
-          color: inherit; /* 또는 다른 원하는 색상 값(#ccc 등) */
+            color: inherit;
+            /* 또는 다른 원하는 색상 값(#ccc 등) */
         }
     </style>
 </head>
@@ -761,11 +762,11 @@
                     <button id="addCircleBtn">
                         <i class="fa-solid fa-circle"></i> 원 추가
                     </button>
-                    <button id="imageAdd" class="menu-item">
-                        <i class="fa-solid fa-image"></i> 이미지 추가
-                    </button>
                     <button id="addFillBtn">
                         <i class="fa-solid fa-square-full"></i> 채우기 추가
+                    </button>
+                    <button id="imageAdd" class="menu-item">
+                        <i class="fa-solid fa-image"></i> 이미지 추가
                     </button>
                     <button id="addTrackBtn">
                         <i class="fa-solid fa-layer-group"></i> 트랙 추가
@@ -896,6 +897,13 @@
                                 <option value="#0000FF">파랑</option>
                                 <option value="#800080">보라</option>
                             </select>
+                        </div>
+                    </div>
+                    <!-- 이미지 전용 속성 -->
+                    <div class="image-properties" style="display: none">
+                        <div class="setting-group">
+                            <div class="setting-label"><i class="fa-solid fa-image"></i> 이미지 파일명</div>
+                            <input type="text" id="imageName" disabled />
                         </div>
                     </div>
                     <div class="fill-properties" style="display: none">
@@ -1984,6 +1992,14 @@
                         "commonProperties"
                     ).style.display = "none";
                     return;
+                } else if (cdata.type === "image") {
+                    // 이미지 타입일 경우 이미지 전용 영역과 공통 속성 표시
+                    textProperties.style.display = "none";
+                    shapeProperties.style.display = "none";
+                    fillProperties.style.display = "none";
+                    imageProperties.style.display = "block";
+                    document.getElementById("imageName").value = cdata.imageFile ? cdata.imageFile.name : "";
+                    document.getElementById("commonProperties").style.display = "";
                 } else {
                     document.getElementById(
                         "commonProperties"
@@ -2822,7 +2838,7 @@
                             imgEl.style.position = "absolute";
                             imgEl.style.left = "50%";
                             imgEl.style.top = "50%";
-                            imgEl.style.transform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc})`;
+                            imgEl.style.transform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc * 0.1})`;
                             imgEl.style.pointerEvents = "auto";
                             imgEl.setAttribute("data-clip-id", c.id);
                             imgEl.style.cursor = "move";
@@ -3467,6 +3483,37 @@
                             Math.round(clip.endTime * 100000) / 100000 +
                             "|" +
                             clip.fillColor;
+                        lines.push(line);
+                    } else if (clip.type === "image") {
+                        let line =
+                            "이미지" +
+                            "|" + (clip.imageFile ? clip.imageFile.name : "이미지없음") +
+                            "|" + Math.round(clip.startTime * 100000) / 100000 +
+                            "|" + Math.round(clip.endTime * 100000) / 100000 +
+                            "|" +
+                            clip.ease.posX +
+                            "|" +
+                            clip.posX[0].value +
+                            "|" +
+                            clip.posX[clip.posX.length - 1].value +
+                            "|" +
+                            clip.ease.posY +
+                            "|" +
+                            clip.posY[0].value +
+                            "|" +
+                            clip.posY[clip.posY.length - 1].value +
+                            "|" +
+                            clip.ease.scale +
+                            "|" +
+                            clip.scale[0].value +
+                            "|" +
+                            clip.scale[clip.scale.length - 1].value +
+                            "|" +
+                            clip.ease.rotation +
+                            "|" +
+                            clip.rotation[0].value +
+                            "|" +
+                            clip.rotation[clip.rotation.length - 1].value;
                         lines.push(line);
                     }
                 });
