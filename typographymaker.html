@@ -683,6 +683,10 @@
             right: -10px;
             cursor: nwse-resize;
         }
+
+        #addFillBtn i {
+          color: inherit; /* 또는 다른 원하는 색상 값(#ccc 등) */
+        }
     </style>
 </head>
 
@@ -4154,19 +4158,13 @@
                                     ]
                                 ).join("");
                                 projectJSON.objects[0].sprite.pictures.push({
-                                    "dimension": {
-                                        "width": 960,
-                                        "height": 540,
-                                        "scaleX": 0.5,
-                                        "scaleY": 0.5
-                                    },
-                                    "fileurl": ``, // ...
-                                    "filename": imageFileName, // ... (업로드한 파일 이름)
+                                    "fileurl": ``,
+                                    "filename": imageFileName,
                                     "imageType": "png",
                                 });
                                 tar.addFile(
-                                    `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png`,
-                                    new File([clip.imageFile], `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png`)
+                                    `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${clip.imageFile.name}.png`,
+                                    new File([clip.imageFile], `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${clip.imageFile.name}.png`)
                                 );
                             }
                         }
