@@ -1978,6 +1978,7 @@
                     textProperties.style.display = "block";
                     shapeProperties.style.display = "none";
                     fillProperties.style.display = "none";
+                    imageProperties.style.display = "none";
                     document.getElementById("textContent").value =
                         cdata.content;
                     document.getElementById("fontFamily").value =
@@ -2001,12 +2002,14 @@
                     textProperties.style.display = "none";
                     shapeProperties.style.display = "block";
                     fillProperties.style.display = "none";
+                    imageProperties.style.display = "none";
                     document.getElementById("shapeColor").value =
                         cdata.shapeColor;
                 } else if (cdata.type === "fill") {
                     textProperties.style.display = "none";
                     shapeProperties.style.display = "none";
                     fillProperties.style.display = "block";
+                    imageProperties.style.display = "none";
                     document.getElementById("fillColor").value =
                         cdata.fillColor;
                     // 새로 추가한 채우기 전용 시간 입력란에 값 반영
