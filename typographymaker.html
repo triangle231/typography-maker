@@ -4139,12 +4139,14 @@
                     .getElementById("exportFile")
                     .addEventListener("click", async function () {
                         let typoArrayData = [];
-                        document
-                            .getElementById("exportCode")
-                            .textContent.split("\n")
-                            .forEach((value) =>
-                                typoArrayData.push({ data: value })
-                            );
+                        document.getElementById("exportCode").textContent
+                          .split(/\r?\n/)
+                          .forEach((value) => {
+                            // 빈 문자열은 제외
+                            if (value.trim() !== "") {
+                              typoArrayData.push({ data: value });
+                            }
+                          });
                         const projectJSON = await fetch(
                             "project.json"
                         ).then((res) => res.json());
