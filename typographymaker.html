@@ -2858,74 +2858,75 @@
                             }
 
                             previewContent.appendChild(circleEl);
-                            } else if (c.type === "image") {
-                              // 컨테이너 생성 (전체(이미지+핸들+테두리)가 같이 축소되도록 함)
-                              const container = document.createElement("div");
-                              container.style.position = "absolute";
-                              container.style.left = "50%";
-                              container.style.top = "50%";
-                              // 기존 sc 대신 sc/1.9로 전체 스케일 적용
-                              container.style.transform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc / 1.9})`;
-                              container.style.pointerEvents = "auto";
-                              container.setAttribute("data-clip-id", c.id);
-                              container.style.cursor = "move";
-                            
-                              // 내부 이미지: 100% 크기로 표시 (추가 스케일 적용 없음)
-                              const imgEl = document.createElement("img");
-                              imgEl.src = c.imageURL;
-                              imgEl.style.width = "100%";
-                              imgEl.style.height = "100%";
-                              container.appendChild(imgEl);
-                            
-                              container.addEventListener("mousedown", onPreviewMouseDown);
-                            
-                              if (selectedClip && selectedClip.id === c.id) {
-                                // 컨테이너에 테두리 적용 (이미지와 동일한 스케일)
-                                container.style.outline = "1px dashed #ffcc00";
-                            
-                                // 회전 핸들 (컨테이너 기준, 원래 위치 -12px를 1/1.9로 조정)
-                                const rotationHandle = document.createElement("div");
-                                rotationHandle.className = "rotation-handle";
-                                rotationHandle.style.position = "absolute";
-                                rotationHandle.style.width = "12px";
-                                rotationHandle.style.height = "12px";
-                                rotationHandle.style.borderRadius = "50%";
-                                rotationHandle.style.backgroundColor = "red";
-                                rotationHandle.style.top = `${-12 / 1.9}px`; // 원래 -12px -> 축소된 값
-                                rotationHandle.style.left = "50%";
-                                // 회전 핸들은 컨테이너의 스케일에 맞게 반대 스케일을 적용합니다.
-                                rotationHandle.style.transform = `translateX(-50%) scale(${1.9 / sc})`;
-                                rotationHandle.style.cursor = "grab";
-                                rotationHandle.addEventListener("mousedown", onPreviewRotationMouseDown);
-                                container.appendChild(rotationHandle);
-                            
-                                // 네 모서리 크기 조절 핸들: 원래 -6px 위치를 1/1.9로 조정
-                                const corners = [
-                                  { pos: "top-left", style: { top: `${-6 / 1.9}px`, left: `${-6 / 1.9}px`, cursor: "nwse-resize" } },
-                                  { pos: "top-right", style: { top: `${-6 / 1.9}px`, right: `${-6 / 1.9}px`, cursor: "nesw-resize" } },
-                                  { pos: "bottom-left", style: { bottom: `${-6 / 1.9}px`, left: `${-6 / 1.9}px`, cursor: "nesw-resize" } },
-                                  { pos: "bottom-right", style: { bottom: `${-6 / 1.9}px`, right: `${-6 / 1.9}px`, cursor: "nwse-resize" } },
-                                ];
-                                corners.forEach((corner) => {
-                                  const scaleHandle = document.createElement("div");
-                                  scaleHandle.className = "scale-handle";
-                                  scaleHandle.setAttribute("data-handle", "scale");
-                                  scaleHandle.style.position = "absolute";
-                                  scaleHandle.style.width = "12px";
-                                  scaleHandle.style.height = "12px";
-                                  scaleHandle.style.backgroundColor = "blue";
-                                  for (const key in corner.style) {
-                                    scaleHandle.style[key] = corner.style[key];
-                                  }
-                                  // 핸들 크기는 컨테이너 스케일에 맞게 반대 스케일을 적용
-                                  scaleHandle.style.transform = `scale(${1.9 / sc})`;
-                                  scaleHandle.addEventListener("mousedown", onPreviewScaleMouseDown);
-                                  container.appendChild(scaleHandle);
-                                });
+                        } else if (c.type === "image") {
+                          // 컨테이너 생성 (회전, 크기 조절 등을 적용)
+                          const container = document.createElement("div");
+                          container.style.position = "absolute";
+                          container.style.left = "50%";
+                          container.style.top = "50%";
+                          // 컨테이너에는 원래의 스케일(sc)을 그대로 적용
+                          container.style.transform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc})`;
+                          container.style.pointerEvents = "auto";
+                          container.setAttribute("data-clip-id", c.id);
+                          container.style.cursor = "move";
+                        
+                          // 이미지 엘리먼트 생성 – 내부 이미지는 1/1.9 만큼 축소
+                          const imgEl = document.createElement("img");
+                          imgEl.src = c.imageURL;
+                          imgEl.style.width = "100%";
+                          imgEl.style.height = "100%";
+                          imgEl.style.transform = `scale(${1 / 1.9})`;
+                          container.appendChild(imgEl);
+                        
+                          container.addEventListener("mousedown", onPreviewMouseDown);
+                        
+                          if (selectedClip && selectedClip.id === c.id) {
+                            // 컨테이너에 테두리 적용
+                            container.style.outline = "1px dashed #ffcc00";
+                        
+                            // 회전 핸들 (원래 -12px였던 오프셋을 이미지 크기에 맞게 줄임)
+                            const rotationHandle = document.createElement("div");
+                            rotationHandle.className = "rotation-handle";
+                            rotationHandle.style.position = "absolute";
+                            rotationHandle.style.width = "12px";
+                            rotationHandle.style.height = "12px";
+                            rotationHandle.style.borderRadius = "50%";
+                            rotationHandle.style.backgroundColor = "red";
+                            // 기존 -12px 대신 -12/1.9 px
+                            rotationHandle.style.top = `${-12 / 1.9}px`;
+                            rotationHandle.style.left = "50%";
+                            rotationHandle.style.transform = `translateX(-50%) scale(${1 / sc})`;
+                            rotationHandle.style.cursor = "grab";
+                            rotationHandle.addEventListener("mousedown", onPreviewRotationMouseDown);
+                            container.appendChild(rotationHandle);
+                        
+                            // 크기 조절 핸들 (네 모서리) – 오프셋 -6px 대신 -6/1.9 px로 적용
+                            const corners = [
+                              { pos: "top-left", style: { top: `${-6 / 1.9}px`, left: `${-6 / 1.9}px`, cursor: "nwse-resize" } },
+                              { pos: "top-right", style: { top: `${-6 / 1.9}px`, right: `${-6 / 1.9}px`, cursor: "nesw-resize" } },
+                              { pos: "bottom-left", style: { bottom: `${-6 / 1.9}px`, left: `${-6 / 1.9}px`, cursor: "nesw-resize" } },
+                              { pos: "bottom-right", style: { bottom: `${-6 / 1.9}px`, right: `${-6 / 1.9}px`, cursor: "nwse-resize" } },
+                            ];
+                            corners.forEach((corner) => {
+                              const scaleHandle = document.createElement("div");
+                              scaleHandle.className = "scale-handle";
+                              scaleHandle.setAttribute("data-handle", "scale");
+                              scaleHandle.style.position = "absolute";
+                              scaleHandle.style.width = "12px";
+                              scaleHandle.style.height = "12px";
+                              scaleHandle.style.backgroundColor = "blue";
+                              for (const key in corner.style) {
+                                scaleHandle.style[key] = corner.style[key];
                               }
-                            
-                              previewContent.appendChild(container);
-                            }
+                              scaleHandle.style.transform = `scale(${1 / sc})`;
+                              scaleHandle.addEventListener("mousedown", onPreviewScaleMouseDown);
+                              container.appendChild(scaleHandle);
+                            });
+                          }
+                        
+                          previewContent.appendChild(container);
+                        }
+                    }
                 });
             }
 
