@@ -2865,7 +2865,7 @@
                             container.style.left = "50%";
                             container.style.top = "50%";
                             // 컨테이너에 transform을 적용하여 위치, 회전, 크기 조절을 합니다.
-                            container.style.transform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc})`;
+                            container.style.transform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc / 1.9})`;
                             container.style.pointerEvents = "auto";
                             container.setAttribute("data-clip-id", c.id);
                             container.style.cursor = "move";
