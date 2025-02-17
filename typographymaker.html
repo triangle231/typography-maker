@@ -2859,20 +2859,30 @@
 
                             previewContent.appendChild(circleEl);
                         } else if (c.type === "image") {
+    // 컨테이너 생성 (회전, 크기 조절 등을 적용할 수 있도록)
+                            const container = document.createElement("div");
+                            container.style.position = "absolute";
+                            container.style.left = "50%";
+                            container.style.top = "50%";
+                            // 컨테이너에 transform을 적용하여 위치, 회전, 크기 조절을 합니다.
+                            container.style.transform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc * 0.1})`;
+                            container.style.pointerEvents = "auto";
+                            container.setAttribute("data-clip-id", c.id);
+                            container.style.cursor = "move";
+                            
+                            // 이미지 엘리먼트 생성
                             const imgEl = document.createElement("img");
                             imgEl.src = c.imageURL;
-                            imgEl.style.position = "absolute";
-                            imgEl.style.left = "50%";
-                            imgEl.style.top = "50%";
-                            imgEl.style.transform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc * 0.1})`;
-                            imgEl.style.pointerEvents = "auto";
-                            imgEl.setAttribute("data-clip-id", c.id);
-                            imgEl.style.cursor = "move";
-
-                            imgEl.addEventListener("mousedown", onPreviewMouseDown);
+                            // 필요에 따라 width/height를 설정
+                            imgEl.style.width = "100%";
+                            imgEl.style.height = "100%";
+                            container.appendChild(imgEl);
+                            
+                            container.addEventListener("mousedown", onPreviewMouseDown);
+                            
                             if (selectedClip && selectedClip.id === c.id) {
-                                imgEl.style.outline = "1px dashed #ffcc00";
-                                // 회전 핸들 추가 (예시)
+                                container.style.outline = "1px dashed #ffcc00";
+                                // 회전 핸들 추가
                                 const rotationHandle = document.createElement("div");
                                 rotationHandle.className = "rotation-handle";
                                 rotationHandle.style.position = "absolute";
@@ -2885,7 +2895,8 @@
                                 rotationHandle.style.transform = `translateX(-50%) scale(${1 / sc})`;
                                 rotationHandle.style.cursor = "grab";
                                 rotationHandle.addEventListener("mousedown", onPreviewRotationMouseDown);
-                                imgEl.appendChild(rotationHandle);
+                                container.appendChild(rotationHandle);
+                            
                                 // 크기 조절 핸들(네 모서리) 추가
                                 const corners = [
                                     { pos: "top-left", style: { top: "-6px", left: "-6px", cursor: "nwse-resize" } },
@@ -2906,10 +2917,11 @@
                                     }
                                     scaleHandle.style.transform = `scale(${1 / sc})`;
                                     scaleHandle.addEventListener("mousedown", onPreviewScaleMouseDown);
-                                    imgEl.appendChild(scaleHandle);
+                                    container.appendChild(scaleHandle);
                                 });
                             }
-                            previewContent.appendChild(imgEl);
+                            
+                            previewContent.appendChild(container);
                         }
                     }
                 });
