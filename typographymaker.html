@@ -2844,6 +2844,8 @@
                             imgEl.style.pointerEvents = "auto";
                             imgEl.setAttribute("data-clip-id", c.id);
                             imgEl.style.cursor = "move";
+
+                            imgEl.addEventListener("mousedown", onPreviewMouseDown);
                             if (selectedClip && selectedClip.id === c.id) {
                                 imgEl.style.outline = "1px dashed #ffcc00";
                                 // 회전 핸들 추가 (예시)
