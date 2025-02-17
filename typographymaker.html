@@ -1101,11 +1101,37 @@
                 document.getElementById("imageInput").click();
             });
 
-            // 이미지 업로드 input change 이벤트: 업로드된 파일로 새로운 이미지 클립 생성
             document.getElementById("imageInput").addEventListener("change", function (e) {
                 const file = e.target.files[0];
                 if (file) {
-                    // 현재 타임라인 위치를 기준으로 새 클립 시작/종료 시간 지정 (예: 5초 길이)
+                    // 고유한 파일 이름을 생성하는 함수
+                    function getUniqueFileName(file) {
+                        let uniqueName = file.name;
+                        let counter = 1;
+                        // clipsData에서 image 타입 클립 중 같은 이름이 있는지 확인
+                        while (
+                            Object.values(clipsData).some(
+                                (clip) =>
+                                    clip.type === "image" &&
+                                    clip.imageFile &&
+                                    clip.imageFile.name === uniqueName
+                            )
+                        ) {
+                            // 파일 이름에서 확장자를 분리하여 뒤에 counter를 붙임
+                            const parts = file.name.split(".");
+                            const ext = parts.pop();
+                            const base = parts.join(".");
+                            uniqueName = `${base}_${counter}.${ext}`;
+                            counter++;
+                        }
+                        return uniqueName;
+                    }
+            
+                    // 고유한 파일 이름 생성 후, 새로운 File 객체로 만듭니다.
+                    const uniqueName = getUniqueFileName(file);
+                    const uniqueFile = new File([file], uniqueName, { type: file.type });
+            
+                    // 타임라인의 현재 위치로 클립의 시작, 종료 시간 지정 (예: 5초 길이)
                     const timelineBody = document.getElementById("timelineBody");
                     const st = timelineBody.scrollLeft / PIXELS_PER_SECOND;
                     const ed = st + 5;
@@ -1115,22 +1141,20 @@
                         tIndex = trackList.length;
                     }
                     const clipId = "clip-" + Math.random().toString(36).substr(2, 9);
-                    // 기존의 createClipDom 함수를 재사용하되 type을 "image"로 전달
                     const clipDom = createClipDom(clipId, st, ed, "image");
-                    // 클립 라벨을 "이미지"로 변경 (필요시)
                     clipDom.querySelector(".clip-label").textContent = "이미지";
                     if (trackList[tIndex - 1]) {
                         trackList[tIndex - 1].appendChild(clipDom);
                     }
-                    // 클립 데이터에 이미지 관련 정보를 추가
+                    // 클립 데이터에 고유한 파일 이름이 적용된 File 객체를 저장합니다.
                     clipsData[clipId] = {
                         id: clipId,
                         type: "image",
                         startTime: st,
                         endTime: ed,
                         trackIndex: tIndex,
-                        imageFile: file,
-                        imageURL: URL.createObjectURL(file),
+                        imageFile: uniqueFile,
+                        imageURL: URL.createObjectURL(uniqueFile),
                         ease: {
                             posX: "linear",
                             posY: "linear",
