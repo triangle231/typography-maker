@@ -4139,14 +4139,9 @@
                     .getElementById("exportFile")
                     .addEventListener("click", async function () {
                         let typoArrayData = [];
-                        document.getElementById("exportCode").textContent
-                          .split(/\r?\n/)
-                          .forEach((value) => {
-                            // 빈 문자열은 제외
-                            if (value.trim() !== "") {
-                              typoArrayData.push({ data: value });
-                            }
-                          });
+                        document.getElementById("exportCode").textContent.split("\n").forEach((value) =>
+                            typoArrayData.push({ data: value })
+                        );
                         const projectJSON = await fetch(
                             "project.json"
                         ).then((res) => res.json());
@@ -4161,7 +4156,7 @@
                                 )
                                 ]
                         ).join("");
-                        projectJSON.variables[19].array = typoArrayData;
+                        projectJSON.variables[20].array = typoArrayData;
                         if (bgAudio != null) {
                             projectJSON.objects[0].sprite.sounds[0].duration =
                                 bgAudio.duration;
