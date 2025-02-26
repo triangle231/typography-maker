@@ -4244,25 +4244,18 @@
                                     Math.floor(Math.random() * "abcdefghijklmnopqrstuvwxyz0123456789".length)
                                     ]
                                 ).join("");
-                                var img = new Image();
-                                
-                                // File 객체를 URL로 변환
-                                var fileURL = URL.createObjectURL(clip.imageFile);
-                                
-                                img.onload = function() {
-                                    projectJSON.objects[1].sprite.pictures.push({
-                                        "fileurl": fileURL,  // 생성된 이미지 URL
-                                        "dimension": {
-                                            "width": img.naturalWidth,  // 실제 이미지 너비
-                                            "height": img.naturalHeight, // 실제 이미지 높이
-                                            "scaleX": 0.5,
-                                            "scaleY": 0.5
-                                        },
-                                        "filename": clip.imageFile.name,  // 파일명
-                                        "name": clip.imageFile.name,        // 이미지 이름
-                                        "imageType": "png"
-                                    });
-                                };
+                                projectJSON.objects[1].sprite.pictures.push({
+                                    "fileurl": ``,
+                                    "dimension": {
+                                        "width": 960,
+                                        "height": 540,
+                                        "scaleX": 0.5,
+                                        "scaleY": 0.5
+                                    },
+                                    "filename": imageFileName,
+                                    "name": clip.imageFile.name,
+                                    "imageType": "png",
+                                });
                                 tar.addFile(
                                     `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png`,
                                     new File([clip.imageFile], `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png`)
