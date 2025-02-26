@@ -1658,6 +1658,7 @@
                             copiedClipData.imageFile = new File([originalFile], newFileName, { type: originalFile.type });
                             // 새로운 Blob URL 생성
                             copiedClipData.imageURL = URL.createObjectURL(copiedClipData.imageFile);
+                            copiedClipData.imageName = originalFile.name
                         }
                         console.log("클립 복사됨:", copiedClipData);
                         e.preventDefault();
