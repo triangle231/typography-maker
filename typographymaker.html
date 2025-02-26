@@ -4245,16 +4245,16 @@
                                     ]
                                 ).join("");
                                 projectJSON.objects[1].sprite.pictures.push({
-                                    "fileurl": ``,
+                                    "fileurl": "",  // 파일 URL을 여기에 지정
                                     "dimension": {
-                                        "width": 960,
-                                        "height": 540,
+                                        "width": img.naturalWidth,
+                                        "height": img.naturalHeight,
                                         "scaleX": 0.5,
                                         "scaleY": 0.5
                                     },
                                     "filename": imageFileName,
-                                    "name": clip.imageFile.name,
-                                    "imageType": "png",
+                                    "name": clip.imageFile.name,  // clip.imageFile.name에 접근 가능해야 함
+                                    "imageType": "png"
                                 });
                                 tar.addFile(
                                     `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png`,
