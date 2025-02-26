@@ -2033,7 +2033,9 @@
                     shapeProperties.style.display = "none";
                     fillProperties.style.display = "none";
                     imageProperties.style.display = "block";
-                    document.getElementById("imageName").value = cdata.imageFile ? cdata.imageFile.name : "";
+                    // imageFile의 name이 없으면 imageFileName 또는 기본 문자열 사용
+                    document.getElementById("imageName").value =
+                        cdata.imageFile ? (cdata.imageFile.name || cdata.imageFileName || "이미지.png") : "";
                     document.getElementById("commonProperties").style.display = "";
                 } else {
                     document.getElementById(
@@ -2382,21 +2384,25 @@
                 let copyOption = document.createElement("div");
                 copyOption.innerText = "복사";
                 copyOption.addEventListener("click", function () {
-                // structuredClone을 사용해 클립 데이터를 깊은 복사
-                copiedClipData = structuredClone(clipsData[clipDom.id]);
-                
-                // 이미지 클립이면 새 파일명과 URL을 생성
-                if (copiedClipData.type === "image" && copiedClipData.imageFile) {
-                    const originalFile = copiedClipData.imageFile;
-                    const newFileName = generateUniqueFileName(originalFile.name);
-                    copiedClipData.imageFile = new File([originalFile], newFileName, { type: originalFile.type });
-                    copiedClipData.imageURL = URL.createObjectURL(copiedClipData.imageFile);
-                }
-                
-                if (document.body.contains(menu)) {
-                    document.body.removeChild(menu);
-                }
+                    // structuredClone을 사용해 클립 데이터를 깊은 복사
+                    copiedClipData = structuredClone(clipsData[clipDom.id]);
+
+                    // 이미지 클립이면 새 File 객체를 생성하지 않고, 이름이 없으면 기본 이름 할당
+                    if (copiedClipData.type === "image" && copiedClipData.imageFile) {
+                        if (!copiedClipData.imageFile.name) {
+                            // File 객체의 name은 읽기 전용이므로 별도의 속성에 기본값을 저장합니다.
+                            copiedClipData.imageFileName = "이미지.png";
+                        } else {
+                            copiedClipData.imageFileName = copiedClipData.imageFile.name;
+                        }
+                        // imageURL은 그대로 복사합니다.
+                    }
+
+                    if (document.body.contains(menu)) {
+                        document.body.removeChild(menu);
+                    }
                 });
+
                 menu.appendChild(copyOption);
 
                 // [붙여넣기] 옵션: 저장된 클립 데이터를 복원하여 붙여넣기
