@@ -1592,31 +1592,48 @@
             }
             // 상태 저장 함수 (undo/redo)
             function saveState() {
-                // structuredClone을 사용하여 clipsData를 깊은 복사합니다.
-                const state = {
-                    clipsData: structuredClone(clipsData),
+                const timelineBody = document.getElementById("timelineBody");
+                // 새 상태 객체 구성
+                const newState = {
+                    clipsData: structuredClone(clipsData), // 클립 관련 정보
                     currentTime: currentTime,
                     totalDuration: totalDuration,
+                    trackCount: trackList.length,              // 현재 트랙 개수
+                    timelineScroll: timelineBody.scrollLeft,     // 타임라인 스크롤 위치
+                    previewBgColor: document.getElementById("previewBgColor").value, // 미리보기 배경색
+                    bgMusicFileName: document.getElementById("bgMusicFileName").textContent,
+                    bgVolume: document.getElementById("bgVolumeControl").value,
                 };
-                undoStack.push(state);
-                // 새로운 작업 발생 시 redoStack 초기화
+
+                // 이전 상태와 비교 (JSON.stringify를 사용한 단순 비교)
+                if (undoStack.length > 0) {
+                    const lastState = undoStack[undoStack.length - 1];
+                    if (JSON.stringify(lastState) === JSON.stringify(newState)) {
+                        // 이전 상태와 완전히 동일하면 저장하지 않음
+                        return;
+                    }
+                }
+
+                // 상태 저장
+                undoStack.push(newState);
+                // 새로운 작업 발생 시 redo 스택 초기화
                 redoStack = [];
             }
 
             // 상태 복원 함수
             function restoreState(state) {
                 const timelineBody = document.getElementById("timelineBody");
-                // 기존 트랙 DOM 제거
+                // 기존 트랙 DOM 모두 제거
                 timelineBody.querySelectorAll(".track").forEach((track) => track.remove());
                 trackList = [];
                 clipsData = {};
                 currentTime = state.currentTime;
                 totalDuration = state.totalDuration;
 
-                // 저장된 clipsData를 순회하며 클립 재생성
+                // 저장된 클립 데이터 복원 (클립이 속한 트랙 번호에 맞게 트랙 생성)
                 for (let cid in state.clipsData) {
                     let clip = state.clipsData[cid];
-                    // 이미지 클립이면 imageFile을 바탕으로 새 imageURL 생성
+                    // 이미지 클립의 경우, 새 imageURL 생성
                     if (clip.type === "image" && clip.imageFile) {
                         clip.imageURL = URL.createObjectURL(clip.imageFile);
                     }
@@ -1628,6 +1645,18 @@
                     trackList[clip.trackIndex - 1].appendChild(newClipDom);
                     clipsData[cid] = clip;
                 }
+                // 클립이 없는 빈 트랙도 있다면 원래의 트랙 개수만큼 생성
+                while (trackList.length < state.trackCount) {
+                    createTrack();
+                }
+                // 타임라인 스크롤 위치 복원
+                timelineBody.scrollLeft = state.timelineScroll;
+                // 미리보기 배경색 및 기타 정보 복원
+                document.getElementById("previewBgColor").value = state.previewBgColor;
+                document.querySelector("#preview .preview-content").style.backgroundColor = state.previewBgColor;
+                document.getElementById("bgMusicFileName").textContent = state.bgMusicFileName;
+                document.getElementById("bgVolumeControl").value = state.bgVolume;
+
                 updatePreview(currentTime);
                 updateTimeIndicator();
                 deselectClip();
@@ -2481,6 +2510,8 @@
             }
             // 미리보기 업데이트 (채우기 클립도 포함하여 트랙 순서대로 정렬)
             function updatePreview(t) {
+                saveState()
+
                 const preview = document.getElementById("preview");
                 const previewContent =
                     preview.querySelector(".preview-content");
