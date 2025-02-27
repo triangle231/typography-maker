@@ -688,6 +688,10 @@
             color: inherit;
             /* 또는 다른 원하는 색상 값(#ccc 등) */
         }
+
+        .keyframe-marker {
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -751,8 +755,29 @@
             </div>
             <!-- 타임라인 영역 -->
             <div class="timeline-area">
+                <!-- 새로 추가한 키프레임 컨트롤 영역 -->
+                <div id="keyframeControls"
+                    style="padding: 8px; background: #444; display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #fff; font-weight: bold;">키 프레임 추가:</span>
+                    <label style="color: #fff;">시간: <input type="number" id="kfTime" step="0.1" value="0"></label>
+                    <label style="color: #fff;">방향:
+                        <select id="kfDirection">
+                            <option value="left">왼쪽</option>
+                            <option value="right">오른쪽</option>
+                            <option value="up">위</option>
+                            <option value="down">아래</option>
+                        </select>
+                    </label>
+                    <label style="color: #fff;">X: <input type="number" id="kfX" step="1" value="0"></label>
+                    <label style="color: #fff;">Y: <input type="number" id="kfY" step="1" value="0"></label>
+                    <label style="color: #fff;">크기: <input type="number" id="kfSize" step="1" value="100"></label>
+                    <button id="addKeyframeBtn">추가</button>
+                </div>
+                <!-- 새로 추가한 키프레임 타임라인 영역 (맨 위 타임라인 전용) -->
+                <div id="keyframeTimeline" style="position: relative; height: 40px; background: #555;"></div>
+                <!-- 기존 타임라인 헤더 -->
                 <div class="timeline-header">
-                    <!-- 네 종류의 클립 추가 버튼 (텍스트, 사각형, 원, 채우기) -->
+                    <!-- (기존 클립 추가 버튼 및 컨트롤들) -->
                     <button id="addTextBtn">
                         <i class="fa-solid fa-font"></i> 텍스트 추가
                     </button>
@@ -1094,6 +1119,8 @@
             let bgAudio = null;
             let bgAudioBlob = null;
             deselectClip();
+
+            let keyframes = [];
 
             let previewRotationData = null;
 
@@ -4168,6 +4195,28 @@
                     .addEventListener("click", function (e) {
                         document.getElementById("bgMusicInput").click();
                     });
+                document.getElementById("addKeyframeBtn").addEventListener("click", function () {
+                    const time = parseFloat(document.getElementById("kfTime").value);
+                    const direction = document.getElementById("kfDirection").value;
+                    const x = parseFloat(document.getElementById("kfX").value);
+                    const y = parseFloat(document.getElementById("kfY").value);
+                    const size = parseFloat(document.getElementById("kfSize").value);
+
+                    let keyframe = { time, direction, x, y, size };
+                    keyframes.push(keyframe);
+
+                    // 키프레임 타임라인에 마커 추가 (좌측 위치는 시간에 따라 결정)
+                    const timeline = document.getElementById("keyframeTimeline");
+                    const marker = document.createElement("div");
+                    marker.className = "keyframe-marker";
+                    marker.style.position = "absolute";
+                    marker.style.left = (time * PIXELS_PER_SECOND) + "px";
+                    marker.style.width = "10px"; // 마커의 고정 폭 (필요에 따라 변경)
+                    marker.style.height = "100%";
+                    marker.style.backgroundColor = "yellow";
+                    marker.title = `시간: ${time}, 방향: ${direction}, x: ${x}, y: ${y}, 크기: ${size}`;
+                    timeline.appendChild(marker);
+                });
                 const previewBgInput =
                     document.getElementById("previewBgColor");
                 previewBgInput.addEventListener("input", function (e) {
