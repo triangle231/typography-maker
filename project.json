@@ -16140,6 +16140,7 @@
     ],
     "tables": [],
     "speed": 60,
+    "name": "타이포 메이커 by.Triangle_",
     "interface": {
         "canvasWidth": 640,
         "object": "5qog"
