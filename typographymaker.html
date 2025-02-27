@@ -252,6 +252,24 @@
             margin-right: 16px;
         }
 
+        #addKeyframeBtn {
+            padding: 4px 8px;
+            background-color: #5a5a5a;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        /* 호버 효과 */
+        #addKeyframeBtn:hover {
+            background-color: #777;
+        }
+
         /* 타임라인 영역 */
         .timeline-area {
             background-color: #333;
@@ -264,15 +282,11 @@
         }
 
         .timeline-header {
-            position: relative;
-            z-index: 1100;
-            height: 32px;
+            padding: 8px;
+            gap: 8px;
+            background: #444;
             display: flex;
             align-items: center;
-            background-color: #3a3a3a;
-            padding: 0 8px;
-            border-bottom: 1px solid #444;
-            gap: 8px;
         }
 
         .timeline-header button {
@@ -285,6 +299,7 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            transition: background-color 0.3s ease;
         }
 
         .timeline-header button:hover {
@@ -655,7 +670,18 @@
             word-wrap: break-word;
             max-height: 300px;
             overflow: auto;
-            background-color: #222;
+            background-color: #363636;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        #exportKeyframes {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow: auto;
+            background-color: #363636;
             padding: 10px;
             border-radius: 4px;
             margin-top: 10px;
@@ -687,6 +713,103 @@
         #addFillBtn i {
             color: inherit;
             /* 또는 다른 원하는 색상 값(#ccc 등) */
+        }
+
+        #keyframeTimeline {
+            height: 30px;
+            background-color: #333;
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid #444;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .keyframe-marker {
+            position: absolute;
+            top: 25%;
+            /* 수직 중앙 배치 */
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(45deg, #ff0000, #d40000);
+            /* 다이아몬드 모양: 정사각형을 45도 회전 */
+            transform: rotate(45deg);
+            border-radius: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            border: 2px solid transparent;
+            cursor: ew-resize;
+        }
+
+        /* 선택된 키프레임 마커 테두리 */
+        .keyframe-marker.selected {
+            border-color: #ffcc00;
+        }
+
+        /* 속성 패널 내 키프레임 속성 영역 */
+        #keyframeProperties {
+            display: none;
+            padding: 8px;
+        }
+
+        #keyframeProperties .setting-group {
+            margin-bottom: 16px;
+        }
+
+        #keyframeProperties .setting-label {
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        /* CSS 부분 */
+        .export-modal-content {
+            background: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+            /* 패딩을 20px으로 통일해 위아래 간격을 좌우와 동일하게 만듭니다 */
+            padding: 10px;
+            width: 500px;
+            position: fixed;
+            top: 25%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .export-modal-content .close-modal {
+            position: absolute;
+            top: -15px;
+            right: 15px;
+            font-size: 28px;
+            color: #aaa;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .export-modal-content .close-modal:hover {
+            color: #fff;
+        }
+
+        .export-modal-content button {
+            background: #333;
+            border: none;
+            color: #fff;
+            padding: 12px 24px;
+            margin: 10px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .export-modal-content button:hover {
+            background: #444;
+        }
+
+        .export-modal-content span {
+            display: block;
+            margin-top: 20px;
+            color: #b0b0b0;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -751,8 +874,19 @@
             </div>
             <!-- 타임라인 영역 -->
             <div class="timeline-area">
+                <!-- 새로 추가한 키프레임 컨트롤 영역 -->
+                <div id="keyframeControls" style="padding: 8px; background: #444; display: flex; align-items: center;">
+                    <span style="color: #fff; margin-right: 8px; font-weight: bold;">카메라 키프레임</span>
+                    <button id="addKeyframeBtn">
+                        <i class="fa-solid fa-key"></i> 키프레임 추가
+                    </button>
+                </div>
+
+                <!-- 키프레임 타임라인 영역 (마커들이 표시됨) -->
+                <div id="keyframeTimeline"></div>
+                <!-- 기존 타임라인 헤더 -->
                 <div class="timeline-header">
-                    <!-- 네 종류의 클립 추가 버튼 (텍스트, 사각형, 원, 채우기) -->
+                    <span style="color: #fff; margin-right: 8px; font-weight: bold;">타임라인</span>
                     <button id="addTextBtn">
                         <i class="fa-solid fa-font"></i> 텍스트 추가
                     </button>
@@ -804,7 +938,6 @@
                 <div id="noSelectionMessage">선택된 클립이 없습니다.</div>
                 <!-- 속성 입력란들을 감싼 영역 -->
                 <div id="propertiesFields">
-                    <!-- 텍스트 전용 속성 (클립이 텍스트일 때만 보임) -->
                     <div class="text-properties">
                         <div class="setting-group">
                             <div class="setting-label">
@@ -1020,6 +1153,30 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 키프레임 속성 패널 (우측 패널 내) -->
+                <div id="keyframeProperties">
+                    <div class="setting-group">
+                        <div class="setting-label">시간</div>
+                        <input type="number" id="kfPropTime" step="0.1">
+                    </div>
+                    <div class="setting-group">
+                        <div class="setting-label">각도 (°)</div>
+                        <input type="number" id="kfPropAngle" step="1" value="0">
+                    </div>
+                    <div class="setting-group">
+                        <div class="setting-label">X</div>
+                        <input type="number" id="kfPropX" step="1">
+                    </div>
+                    <div class="setting-group">
+                        <div class="setting-label">Y</div>
+                        <input type="number" id="kfPropY" step="1">
+                    </div>
+                    <div class="setting-group">
+                        <div class="setting-label">크기</div>
+                        <input type="number" id="kfPropSize" step="1">
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1029,15 +1186,11 @@
         <div class="export-modal-content">
             <span class="close-modal">&times;</span>
             <!-- 복사 버튼 추가 -->
-            <button id="copyExportCode" style="margin-bottom: 10px">
-                복사하기
-            </button>
-            <button id="exportFile" style="margin-bottom: 10px">
-                파일로 내보내기
-            </button>
-            <span>mp3 외의 포멧은 오프라인 엔트리에서만 재생할 수
-                있습니다</span>
+            <button id="copyExportCode">복사하기</button>
+            <button id="exportFile">파일로 내보내기</button>
+            <span>mp3 외의 포멧은 오프라인 엔트리에서만 재생할 수 있습니다</span>
             <pre id="exportCode"></pre>
+            <pre id="exportKeyframes" style="margin-top: 10px;"></pre>
         </div>
     </div>
 
@@ -1048,12 +1201,13 @@
             <textarea id="importCode" placeholder="엔트리 프로젝트 코드를 붙여넣으세요" style="
                         width: 100%;
                         height: 200px;
-                        background-color: #222;
+                        background-color: #363636;
                         padding: 10px;
                         border-radius: 4px;
                         margin-top: 10px;
                         color: #fff;
                         border: none;
+                        resize: none;
                     "></textarea>
             <button id="importEntryBtn" style="margin-top: 10px">
                 불러오기
@@ -1069,6 +1223,7 @@
             let currentTime = 0;
             let lastTimestamp = 0;
             let copiedClipData = null;
+            let copiedKeyframe = null;
             let undoStack = [];
             let redoStack = [];
             let totalDuration = 300; // 최대 시간(초)
@@ -1094,6 +1249,11 @@
             let bgAudio = null;
             let bgAudioBlob = null;
             deselectClip();
+
+            let keyframes = []; // 모든 키프레임 객체를 저장 (객체: {id, time, direction, x, y, size})
+            let selectedKeyframe = null;
+            let draggingKeyframe = null;
+            let keyframeDragOffset = 0;
 
             let previewRotationData = null;
 
@@ -1573,6 +1733,22 @@
                 }
                 return null;
             }
+            function updateTimeIndicator() {
+                const indicator = document.getElementById("timeIndicator");
+                const timelineBody = document.getElementById("timelineBody");
+                if (indicator && timelineBody) {
+                    // 현재 시간에 따른 x좌표 계산 후, 타임라인의 스크롤 오프셋을 빼줌
+                    indicator.style.left = (currentTime * PIXELS_PER_SECOND - timelineBody.scrollLeft) + "px";
+                    // 타임라인 전체 콘텐츠 높이만큼 높이를 지정
+                    indicator.style.height = timelineBody.scrollHeight + "px";
+                }
+            }
+
+            // 타임라인 스크롤 이벤트에도 동기화
+            document.getElementById("timelineBody").addEventListener("scroll", updateTimeIndicator);
+
+            // 재생 루프나 기타 상황에서도 updateTimeIndicator()를 호출하여 동기화 유지
+
             function isTrackEmptyFor(
                 trackIndex,
                 st,
@@ -2508,16 +2684,55 @@
                     document.querySelectorAll(".clip-context-menu");
                 existing.forEach((menu) => menu.remove());
             }
-            // 미리보기 업데이트 (채우기 클립도 포함하여 트랙 순서대로 정렬)
-            function updatePreview(t) {
-                saveState()
+            function getCameraValueAtTime(keyframes, prop, t) {
+                // keyframes 배열을 시간순으로 정렬
+                const sorted = keyframes.slice().sort((a, b) => a.time - b.time);
+                if (t <= sorted[0].time) return sorted[0][prop];
+                if (t >= sorted[sorted.length - 1].time) return sorted[sorted.length - 1][prop];
+                for (let i = 0; i < sorted.length - 1; i++) {
+                    const k1 = sorted[i],
+                        k2 = sorted[i + 1];
+                    if (t >= k1.time && t <= k2.time) {
+                        const alpha = (t - k1.time) / (k2.time - k1.time);
+                        const easedAlpha = applyEase(alpha, "easeInOut"); // 강제로 easeInOut 적용
+                        return k1[prop] + (k2[prop] - k1[prop]) * easedAlpha;
+                    }
+                }
+                return sorted[sorted.length - 1][prop];
+            }
 
+            function getCameraParameters(t) {
+                // 카메라 키프레임이 없으면 기본값 (회전 0, 이동 0, 크기 100 = 1배)
+                if (keyframes.length === 0) {
+                    return { angle: 0, x: 0, y: 0, scale: 1 };
+                }
+                const angle = getCameraValueAtTime(keyframes, "angle", t);
+                const x = getCameraValueAtTime(keyframes, "x", t);
+                const y = getCameraValueAtTime(keyframes, "y", t);
+                const size = getCameraValueAtTime(keyframes, "size", t);
+                // size가 100이면 기본, 1000이면 10배, 0이면 0, 1이면 1/100배로 계산
+                const scale = size / 100;
+                return { angle, x, y, scale };
+            }
+
+            function updatePreview(t) {
+                saveState();
                 const preview = document.getElementById("preview");
-                const previewContent =
-                    preview.querySelector(".preview-content");
+                const previewContent = preview.querySelector(".preview-content");
                 previewContent.innerHTML = "";
 
-                // t 시간에 활성화된 클립들을 모음
+                // 카메라 키프레임 보간: 시간 t에 따른 카메라 파라미터를 구합니다.
+                // getCameraParameters(t)는 { angle, x, y, scale }을 반환하도록 작성합니다.
+                // 예를 들어, scale은 size/100 (size=100 → scale=1, size=1000 → scale=10)
+                const cam = getCameraParameters(t);
+                // 카메라의 역변환: 
+                // - 카메라가 오른쪽으로 이동하면 월드(요소)는 왼쪽으로 이동하도록: translate(-cam.x, -cam.y)
+                // - 카메라 회전은 반대로: rotate(-cam.angle)
+                // - 카메라 확대(zoom in)은 요소들을 키우도록: scale(cam.scale)
+                const cameraTransform = `translate(${-cam.x}px, ${-cam.y}px) rotate(${-cam.angle}deg)`;
+                const CameraScale = cam.scale
+
+                // t 시간에 활성화된 클립들을 모읍니다.
                 let visibleClips = [];
                 for (let cid in clipsData) {
                     if (!document.getElementById(cid)) continue;
@@ -2527,7 +2742,7 @@
                     }
                 }
 
-                // 트랙 순서 역순으로 (높은 번호가 먼저 그려지고, 낮은 번호가 아래로 내려감)
+                // 트랙 순서 역순 정렬 (높은 번호가 앞쪽에 그려짐)
                 visibleClips.sort((a, b) => b.trackIndex - a.trackIndex);
 
                 visibleClips.forEach((c) => {
@@ -2535,164 +2750,83 @@
                         const fillEl = document.createElement("div");
                         fillEl.className = "preview-fill";
                         fillEl.style.backgroundColor = c.fillColor;
+                        // 채우기 클립은 카메라 transform만 적용 (배경 전체)
                         previewContent.appendChild(fillEl);
                     } else {
                         const localT = t - c.startTime;
                         const dur = c.endTime - c.startTime;
-                        let xVal = getValueAtTime(
-                            c.posX,
-                            localT,
-                            dur,
-                            c.ease.posX
-                        );
-                        let yVal = getValueAtTime(
-                            c.posY,
-                            localT,
-                            dur,
-                            c.ease.posY
-                        );
+                        let xVal = getValueAtTime(c.posX, localT, dur, c.ease.posX);
+                        let yVal = getValueAtTime(c.posY, localT, dur, c.ease.posY);
+                        // 기존 좌표 보정
                         xVal = clamp(xVal, -240, 240) * 1.6;
                         yVal = -clamp(yVal, -135, 135) * 1.6;
-                        const sc =
-                            getValueAtTime(
-                                c.scale,
-                                localT,
-                                dur,
-                                c.ease.scale
-                            ) / 50;
-                        const rot = getValueAtTime(
-                            c.rotation,
-                            localT,
-                            dur,
-                            c.ease.rotation
-                        );
+                        const sc = getValueAtTime(c.scale, localT, dur, c.ease.scale) / 50;
+                        const rot = getValueAtTime(c.rotation, localT, dur, c.ease.rotation);
+                        // 각 클립 자체의 transform (원래 요소의 위치, 회전, 스케일)
+                        const elementTransform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc * CameraScale})`;
+                        // 최종적으로 카메라의 역변환과 요소의 변환을 결합합니다.
+                        const combinedTransform = cameraTransform + " " + elementTransform;
+
                         if (c.type === "text") {
                             const textEl = document.createElement("div");
                             textEl.className = "preview-text";
                             textEl.textContent = c.content;
                             textEl.style.fontFamily = c.fontFamily;
-                            textEl.style.fontWeight = c.bold
-                                ? "bold"
-                                : "normal";
-                            textEl.style.fontStyle = c.italic
-                                ? "italic"
-                                : "normal";
+                            textEl.style.fontWeight = c.bold ? "bold" : "normal";
+                            textEl.style.fontStyle = c.italic ? "italic" : "normal";
                             let decorations = [];
                             if (c.underline) decorations.push("underline");
-                            if (c.strikethrough)
-                                decorations.push("line-through");
-                            textEl.style.textDecoration =
-                                decorations.join(" ") || "none";
+                            if (c.strikethrough) decorations.push("line-through");
+                            textEl.style.textDecoration = decorations.join(" ") || "none";
                             textEl.style.color = c.textColor;
-                            textEl.style.backgroundColor =
-                                c.backgroundColor;
-                            textEl.style.transform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc})`;
-
-                            // 프리뷰와 타임라인 연결: 클립 ID 저장 및 pointer-events 활성화
+                            textEl.style.backgroundColor = c.backgroundColor;
+                            textEl.style.transform = combinedTransform;
                             textEl.setAttribute("data-clip-id", c.id);
                             textEl.style.pointerEvents = "auto";
-                            textEl.addEventListener(
-                                "mousedown",
-                                onPreviewMouseDown
-                            );
+                            textEl.addEventListener("mousedown", onPreviewMouseDown);
                             textEl.style.cursor = "move";
 
-                            // 선택된 클립이면 테두리와 핸들 추가
                             if (selectedClip && selectedClip.id === c.id) {
-                                // 테두리: 1px dashed
                                 textEl.style.outline = "1px dashed #ffcc00";
-
-                                // 회전 핸들 (상단 중앙; 크기는 8px×8px, 반대 스케일 적용)
-                                const rotationHandle =
-                                    document.createElement("div");
-                                rotationHandle.className =
-                                    "rotation-handle";
-                                rotationHandle.setAttribute(
-                                    "data-handle",
-                                    "rotation"
-                                );
+                                // 회전 핸들 (상단 중앙)
+                                const rotationHandle = document.createElement("div");
+                                rotationHandle.className = "rotation-handle";
+                                rotationHandle.setAttribute("data-handle", "rotation");
                                 rotationHandle.style.position = "absolute";
                                 rotationHandle.style.width = "12px";
                                 rotationHandle.style.height = "12px";
                                 rotationHandle.style.borderRadius = "50%";
-                                rotationHandle.style.backgroundColor =
-                                    "red";
+                                rotationHandle.style.backgroundColor = "red";
                                 rotationHandle.style.top = "-12px";
                                 rotationHandle.style.left = "50%";
-                                // translateX(-50%)로 중앙 정렬 후, 부모 스케일 보정
-                                rotationHandle.style.transform = `translateX(-50%) scale(${1 / sc
-                                    })`;
+                                rotationHandle.style.transform = `translateX(-50%) scale(${1 / sc})`;
                                 rotationHandle.style.cursor = "grab";
-                                rotationHandle.addEventListener(
-                                    "mousedown",
-                                    onPreviewRotationMouseDown
-                                );
+                                rotationHandle.addEventListener("mousedown", onPreviewRotationMouseDown);
                                 textEl.appendChild(rotationHandle);
 
-                                // 크기 조절 핸들 (네 꼭지점에 6px×6px; 부모 스케일 보정)
+                                // 크기 조절 핸들 (네 꼭지점)
                                 const corners = [
-                                    {
-                                        pos: "top-left",
-                                        style: {
-                                            top: "-6px",
-                                            left: "-6px",
-                                            cursor: "nwse-resize",
-                                        },
-                                    },
-                                    {
-                                        pos: "top-right",
-                                        style: {
-                                            top: "-6px",
-                                            right: "-6px",
-                                            cursor: "nesw-resize",
-                                        },
-                                    },
-                                    {
-                                        pos: "bottom-left",
-                                        style: {
-                                            bottom: "-6px",
-                                            left: "-6px",
-                                            cursor: "nesw-resize",
-                                        },
-                                    },
-                                    {
-                                        pos: "bottom-right",
-                                        style: {
-                                            bottom: "-6px",
-                                            right: "-6px",
-                                            cursor: "nwse-resize",
-                                        },
-                                    },
+                                    { pos: "top-left", style: { top: "-6px", left: "-6px", cursor: "nwse-resize" } },
+                                    { pos: "top-right", style: { top: "-6px", right: "-6px", cursor: "nesw-resize" } },
+                                    { pos: "bottom-left", style: { bottom: "-6px", left: "-6px", cursor: "nesw-resize" } },
+                                    { pos: "bottom-right", style: { bottom: "-6px", right: "-6px", cursor: "nwse-resize" } },
                                 ];
                                 corners.forEach((corner) => {
-                                    const scaleHandle =
-                                        document.createElement("div");
+                                    const scaleHandle = document.createElement("div");
                                     scaleHandle.className = "scale-handle";
-                                    scaleHandle.setAttribute(
-                                        "data-handle",
-                                        "scale"
-                                    );
+                                    scaleHandle.setAttribute("data-handle", "scale");
                                     scaleHandle.style.position = "absolute";
                                     scaleHandle.style.width = "12px";
                                     scaleHandle.style.height = "12px";
-                                    scaleHandle.style.backgroundColor =
-                                        "blue";
-                                    // 적용할 스타일 속성을 할당
+                                    scaleHandle.style.backgroundColor = "blue";
                                     for (const key in corner.style) {
-                                        scaleHandle.style[key] =
-                                            corner.style[key];
+                                        scaleHandle.style[key] = corner.style[key];
                                     }
-                                    // 부모 스케일 보정: 자식 핸들이 항상 고정된 크기로 보임
-                                    scaleHandle.style.transform = `scale(${1 / sc
-                                        })`;
-                                    scaleHandle.addEventListener(
-                                        "mousedown",
-                                        onPreviewScaleMouseDown
-                                    );
+                                    scaleHandle.style.transform = `scale(${1 / sc})`;
+                                    scaleHandle.addEventListener("mousedown", onPreviewScaleMouseDown);
                                     textEl.appendChild(scaleHandle);
                                 });
                             }
-
                             previewContent.appendChild(textEl);
                         } else if (c.type === "rectangle") {
                             const rectEl = document.createElement("div");
@@ -2700,107 +2834,51 @@
                             rectEl.style.width = "80px";
                             rectEl.style.height = "80px";
                             rectEl.style.backgroundColor = c.shapeColor;
-                            rectEl.style.transform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc})`;
-
+                            rectEl.style.transform = combinedTransform;
                             rectEl.setAttribute("data-clip-id", c.id);
                             rectEl.style.pointerEvents = "auto";
-                            rectEl.addEventListener(
-                                "mousedown",
-                                onPreviewMouseDown
-                            );
+                            rectEl.addEventListener("mousedown", onPreviewMouseDown);
                             rectEl.style.cursor = "move";
 
                             if (selectedClip && selectedClip.id === c.id) {
                                 rectEl.style.outline = "1px dashed #ffcc00";
-
-                                // 회전 핸들 (상단 중앙; 8px×8px, 반대 스케일 적용)
-                                const rotationHandle =
-                                    document.createElement("div");
-                                rotationHandle.className =
-                                    "rotation-handle";
-                                rotationHandle.setAttribute(
-                                    "data-handle",
-                                    "rotation"
-                                );
+                                const rotationHandle = document.createElement("div");
+                                rotationHandle.className = "rotation-handle";
+                                rotationHandle.setAttribute("data-handle", "rotation");
                                 rotationHandle.style.position = "absolute";
                                 rotationHandle.style.width = "12px";
                                 rotationHandle.style.height = "12px";
                                 rotationHandle.style.borderRadius = "50%";
-                                rotationHandle.style.backgroundColor =
-                                    "red";
+                                rotationHandle.style.backgroundColor = "red";
                                 rotationHandle.style.top = "-12px";
                                 rotationHandle.style.left = "50%";
-                                rotationHandle.style.transform = `translateX(-50%) scale(${1 / sc
-                                    })`;
+                                rotationHandle.style.transform = `translateX(-50%) scale(${1 / sc})`;
                                 rotationHandle.style.cursor = "grab";
-                                rotationHandle.addEventListener(
-                                    "mousedown",
-                                    onPreviewRotationMouseDown
-                                );
+                                rotationHandle.addEventListener("mousedown", onPreviewRotationMouseDown);
                                 rectEl.appendChild(rotationHandle);
 
-                                // 네 꼭지점에 크기 조절 핸들 (6px×6px, 반대 스케일 적용)
                                 const corners = [
-                                    {
-                                        pos: "top-left",
-                                        style: {
-                                            top: "-6px",
-                                            left: "-6px",
-                                            cursor: "nwse-resize",
-                                        },
-                                    },
-                                    {
-                                        pos: "top-right",
-                                        style: {
-                                            top: "-6px",
-                                            right: "-6px",
-                                            cursor: "nesw-resize",
-                                        },
-                                    },
-                                    {
-                                        pos: "bottom-left",
-                                        style: {
-                                            bottom: "-6px",
-                                            left: "-6px",
-                                            cursor: "nesw-resize",
-                                        },
-                                    },
-                                    {
-                                        pos: "bottom-right",
-                                        style: {
-                                            bottom: "-6px",
-                                            right: "-6px",
-                                            cursor: "nwse-resize",
-                                        },
-                                    },
+                                    { pos: "top-left", style: { top: "-6px", left: "-6px", cursor: "nwse-resize" } },
+                                    { pos: "top-right", style: { top: "-6px", right: "-6px", cursor: "nesw-resize" } },
+                                    { pos: "bottom-left", style: { bottom: "-6px", left: "-6px", cursor: "nesw-resize" } },
+                                    { pos: "bottom-right", style: { bottom: "-6px", right: "-6px", cursor: "nwse-resize" } },
                                 ];
                                 corners.forEach((corner) => {
-                                    const scaleHandle =
-                                        document.createElement("div");
+                                    const scaleHandle = document.createElement("div");
                                     scaleHandle.className = "scale-handle";
-                                    scaleHandle.setAttribute(
-                                        "data-handle",
-                                        "scale"
-                                    );
+                                    scaleHandle.setAttribute("data-handle", "scale");
                                     scaleHandle.style.position = "absolute";
                                     scaleHandle.style.width = "12px";
                                     scaleHandle.style.height = "12px";
-                                    scaleHandle.style.backgroundColor =
-                                        "blue";
+                                    scaleHandle.style.backgroundColor = "blue";
                                     for (const key in corner.style) {
-                                        scaleHandle.style[key] =
-                                            corner.style[key];
+                                        scaleHandle.style[key] = corner.style[key];
                                     }
-                                    scaleHandle.style.transform = `scale(${1 / sc
-                                        })`;
-                                    scaleHandle.addEventListener(
-                                        "mousedown",
-                                        onPreviewScaleMouseDown
-                                    );
+                                    scaleHandle.style.transform = `scale(${1 / sc})`;
+                                    scaleHandle.addEventListener("mousedown", onPreviewScaleMouseDown);
                                     rectEl.appendChild(scaleHandle);
                                 });
                             }
-
                             previewContent.appendChild(rectEl);
                         } else if (c.type === "circle") {
                             const circleEl = document.createElement("div");
@@ -2809,134 +2887,71 @@
                             circleEl.style.height = "80px";
                             circleEl.style.backgroundColor = c.shapeColor;
                             circleEl.style.borderRadius = "50%";
-                            circleEl.style.transform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc})`;
-
+                            circleEl.style.transform = combinedTransform;
                             circleEl.setAttribute("data-clip-id", c.id);
                             circleEl.style.pointerEvents = "auto";
-                            circleEl.addEventListener(
-                                "mousedown",
-                                onPreviewMouseDown
-                            );
+                            circleEl.addEventListener("mousedown", onPreviewMouseDown);
                             circleEl.style.cursor = "move";
 
                             if (selectedClip && selectedClip.id === c.id) {
-                                circleEl.style.outline =
-                                    "1px dashed #ffcc00";
-
-                                // 회전 핸들 (상단 중앙; 8px×8px, 반대 스케일 적용)
-                                const rotationHandle =
-                                    document.createElement("div");
-                                rotationHandle.className =
-                                    "rotation-handle";
-                                rotationHandle.setAttribute(
-                                    "data-handle",
-                                    "rotation"
-                                );
+                                circleEl.style.outline = "1px dashed #ffcc00";
+                                const rotationHandle = document.createElement("div");
+                                rotationHandle.className = "rotation-handle";
+                                rotationHandle.setAttribute("data-handle", "rotation");
                                 rotationHandle.style.position = "absolute";
                                 rotationHandle.style.width = "12px";
                                 rotationHandle.style.height = "12px";
                                 rotationHandle.style.borderRadius = "50%";
-                                rotationHandle.style.backgroundColor =
-                                    "red";
+                                rotationHandle.style.backgroundColor = "red";
                                 rotationHandle.style.top = "-12px";
                                 rotationHandle.style.left = "50%";
-                                rotationHandle.style.transform = `translateX(-50%) scale(${1 / sc
-                                    })`;
+                                rotationHandle.style.transform = `translateX(-50%) scale(${1 / sc})`;
                                 rotationHandle.style.cursor = "grab";
-                                rotationHandle.addEventListener(
-                                    "mousedown",
-                                    onPreviewRotationMouseDown
-                                );
+                                rotationHandle.addEventListener("mousedown", onPreviewRotationMouseDown);
                                 circleEl.appendChild(rotationHandle);
 
-                                // 네 꼭지점에 크기 조절 핸들 (6px×6px, 반대 스케일 적용)
                                 const corners = [
-                                    {
-                                        pos: "top-left",
-                                        style: {
-                                            top: "-6px",
-                                            left: "-6px",
-                                            cursor: "nwse-resize",
-                                        },
-                                    },
-                                    {
-                                        pos: "top-right",
-                                        style: {
-                                            top: "-6px",
-                                            right: "-6px",
-                                            cursor: "nesw-resize",
-                                        },
-                                    },
-                                    {
-                                        pos: "bottom-left",
-                                        style: {
-                                            bottom: "-6px",
-                                            left: "-6px",
-                                            cursor: "nesw-resize",
-                                        },
-                                    },
-                                    {
-                                        pos: "bottom-right",
-                                        style: {
-                                            bottom: "-6px",
-                                            right: "-6px",
-                                            cursor: "nwse-resize",
-                                        },
-                                    },
+                                    { pos: "top-left", style: { top: "-6px", left: "-6px", cursor: "nwse-resize" } },
+                                    { pos: "top-right", style: { top: "-6px", right: "-6px", cursor: "nesw-resize" } },
+                                    { pos: "bottom-left", style: { bottom: "-6px", left: "-6px", cursor: "nesw-resize" } },
+                                    { pos: "bottom-right", style: { bottom: "-6px", right: "-6px", cursor: "nwse-resize" } },
                                 ];
                                 corners.forEach((corner) => {
-                                    const scaleHandle =
-                                        document.createElement("div");
+                                    const scaleHandle = document.createElement("div");
                                     scaleHandle.className = "scale-handle";
-                                    scaleHandle.setAttribute(
-                                        "data-handle",
-                                        "scale"
-                                    );
+                                    scaleHandle.setAttribute("data-handle", "scale");
                                     scaleHandle.style.position = "absolute";
                                     scaleHandle.style.width = "12px";
                                     scaleHandle.style.height = "12px";
-                                    scaleHandle.style.backgroundColor =
-                                        "blue";
+                                    scaleHandle.style.backgroundColor = "blue";
                                     for (const key in corner.style) {
-                                        scaleHandle.style[key] =
-                                            corner.style[key];
+                                        scaleHandle.style[key] = corner.style[key];
                                     }
-                                    scaleHandle.style.transform = `scale(${1 / sc
-                                        })`;
-                                    scaleHandle.addEventListener(
-                                        "mousedown",
-                                        onPreviewScaleMouseDown
-                                    );
+                                    scaleHandle.style.transform = `scale(${1 / sc})`;
+                                    scaleHandle.addEventListener("mousedown", onPreviewScaleMouseDown);
                                     circleEl.appendChild(scaleHandle);
                                 });
                             }
-
                             previewContent.appendChild(circleEl);
                         } else if (c.type === "image") {
-                            // 컨테이너 생성 (회전, 크기 조절 등을 적용할 수 있도록)
                             const container = document.createElement("div");
                             container.style.position = "absolute";
                             container.style.left = "50%";
                             container.style.top = "50%";
-                            // 컨테이너에 transform을 적용하여 위치, 회전, 크기 조절을 합니다.
-                            container.style.transform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc})`;
+                            const elementTransform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc * CameraScale}})`;
+                            const combinedTransform = cameraTransform + " " + elementTransform;
+                            container.style.transform = combinedTransform;
                             container.style.pointerEvents = "auto";
                             container.setAttribute("data-clip-id", c.id);
                             container.style.cursor = "move";
-
-                            // 이미지 엘리먼트 생성
                             const imgEl = document.createElement("img");
                             imgEl.src = c.imageURL;
-                            // 필요에 따라 width/height를 설정
                             imgEl.style.width = "100%";
                             imgEl.style.height = "100%";
                             container.appendChild(imgEl);
-
                             container.addEventListener("mousedown", onPreviewMouseDown);
-
                             if (selectedClip && selectedClip.id === c.id) {
                                 container.style.outline = "1px dashed #ffcc00";
-                                // 회전 핸들 추가
                                 const rotationHandle = document.createElement("div");
                                 rotationHandle.className = "rotation-handle";
                                 rotationHandle.style.position = "absolute";
@@ -2951,7 +2966,6 @@
                                 rotationHandle.addEventListener("mousedown", onPreviewRotationMouseDown);
                                 container.appendChild(rotationHandle);
 
-                                // 크기 조절 핸들(네 모서리) 추가
                                 const corners = [
                                     { pos: "top-left", style: { top: "-6px", left: "-6px", cursor: "nwse-resize" } },
                                     { pos: "top-right", style: { top: "-6px", right: "-6px", cursor: "nesw-resize" } },
@@ -2974,7 +2988,6 @@
                                     container.appendChild(scaleHandle);
                                 });
                             }
-
                             previewContent.appendChild(container);
                         }
                     }
@@ -2991,8 +3004,7 @@
                     const k1 = kframes[i],
                         k2 = kframes[i + 1];
                     if (localT >= k1.time && localT <= k2.time) {
-                        const alpha =
-                            (localT - k1.time) / (k2.time - k1.time);
+                        const alpha = (localT - k1.time) / (k2.time - k1.time);
                         const eased = applyEase(alpha, ease);
                         return k1.value + (k2.value - k1.value) * eased;
                     }
@@ -3432,8 +3444,7 @@
             // ── 엔트리 내보내기 기능 ──
             function exportEntryProject() {
                 let lines = [];
-                let bgColor =
-                    document.getElementById("previewBgColor").value;
+                let bgColor = document.getElementById("previewBgColor").value;
                 lines.push(bgColor);
                 const shapeColorNameMap = {
                     "#FF0000": "빨강",
@@ -3444,10 +3455,12 @@
                     "#800080": "보라",
                 };
                 let clipsArray = Object.values(clipsData);
+                // (기존 클립 내보내기 코드 – 필요에 따라 그대로 유지)
                 clipsArray.sort((a, b) => b.trackIndex - a.trackIndex);
                 clipsArray.forEach((clip) => {
+                    let line = "";
                     if (clip.type === "text") {
-                        let line =
+                        line =
                             "텍스트" +
                             "|" +
                             clip.content +
@@ -3493,12 +3506,9 @@
                             clip.rotation[0].value +
                             "|" +
                             clip.rotation[clip.rotation.length - 1].value;
-                        lines.push(line);
                     } else if (clip.type === "rectangle") {
-                        let colorName =
-                            shapeColorNameMap[clip.shapeColor] ||
-                            clip.shapeColor;
-                        let line =
+                        let colorName = shapeColorNameMap[clip.shapeColor] || clip.shapeColor;
+                        line =
                             "사각형" +
                             "|" +
                             colorName +
@@ -3530,12 +3540,9 @@
                             clip.rotation[0].value +
                             "|" +
                             clip.rotation[clip.rotation.length - 1].value;
-                        lines.push(line);
                     } else if (clip.type === "circle") {
-                        let colorName =
-                            shapeColorNameMap[clip.shapeColor] ||
-                            clip.shapeColor;
-                        let line =
+                        let colorName = shapeColorNameMap[clip.shapeColor] || clip.shapeColor;
+                        line =
                             "원" +
                             "|" +
                             colorName +
@@ -3567,9 +3574,8 @@
                             clip.rotation[0].value +
                             "|" +
                             clip.rotation[clip.rotation.length - 1].value;
-                        lines.push(line);
                     } else if (clip.type === "fill") {
-                        let line =
+                        line =
                             "채우기" +
                             "|" +
                             Math.round(clip.startTime * 100000) / 100000 +
@@ -3577,9 +3583,8 @@
                             Math.round(clip.endTime * 100000) / 100000 +
                             "|" +
                             clip.fillColor;
-                        lines.push(line);
                     } else if (clip.type === "image") {
-                        let line =
+                        line =
                             "이미지" +
                             "|" + (clip.imageFile ? clip.imageFile.name : "이미지없음") +
                             "|" + Math.round(clip.startTime * 100000) / 100000 +
@@ -3608,11 +3613,34 @@
                             clip.rotation[0].value +
                             "|" +
                             clip.rotation[clip.rotation.length - 1].value;
-                        lines.push(line);
                     }
+                    lines.push(line);
                 });
                 let output = lines.join("\n");
                 document.getElementById("exportCode").textContent = output;
+
+                // ── 새로 추가: 키프레임 리스트 내보내기 ──
+                let keyframeLines = [];
+                // 시간 순으로 정렬 (오름차순)
+                let sortedKeyframes = keyframes.slice().sort((a, b) => a.time - b.time);
+
+                if (sortedKeyframes.length === 0) {
+                    // 빈 리스트이면 기본 값 추가
+                    keyframeLines.push("0|0|0|0|100");
+                } else {
+                    // 가장 0초와 가까운 요소 (첫번째 요소)의 초가 0이 아니면, 
+                    // 해당 요소의 다른 값은 유지하고 초만 0으로 한 새로운 요소를 맨 앞에 추가
+                    if (sortedKeyframes[0].time !== 0) {
+                        let first = sortedKeyframes[0];
+                        keyframeLines.push(`0|${first.angle}|${first.x}|${first.y}|${first.size}`);
+                    }
+                    // 기존의 keyframe들을 모두 추가
+                    sortedKeyframes.forEach((kf) => {
+                        keyframeLines.push(`${kf.time}|${kf.angle}|${kf.x}|${kf.y}|${kf.size}`);
+                    });
+                }
+
+                document.getElementById("exportKeyframes").textContent = keyframeLines.join("\n");
             }
 
             // ── 엔트리 불러오기 기능 ──
@@ -3920,7 +3948,313 @@
             });
 
             window.addEventListener("DOMContentLoaded", () => {
-                // 타임라인 배경(빈 영역) 우클릭 시 붙여넣기 메뉴 표시
+                const timelineBody = document.getElementById("timelineBody");
+                const keyframeTimeline = document.getElementById("keyframeTimeline");
+
+                // 타임라인 스크롤에 따라 키프레임 영역을 이동시키고 너비도 동기화
+                function syncKeyframeArea() {
+                    // 타임라인 스크롤에 따라 키프레임 영역을 좌측으로 이동
+                    keyframeTimeline.style.transform = `translateX(${-timelineBody.scrollLeft}px)`;
+                    // 타임라인의 전체 너비(콘텐츠 너비)를 키프레임 영역에 적용
+                    keyframeTimeline.style.width = timelineBody.scrollWidth + "px";
+                }
+
+                // 초기 동기화
+                syncKeyframeArea();
+
+                // 타임라인 스크롤 이벤트에 동기화 함수 추가
+                timelineBody.addEventListener("scroll", syncKeyframeArea);
+
+                // 창 크기 변경 시에도 업데이트 (필요한 경우)
+                window.addEventListener("resize", syncKeyframeArea);
+
+
+                document.getElementById("timelineBody").addEventListener("scroll", function (e) {
+                    const scrollLeft = e.target.scrollLeft;
+                    document.getElementById("keyframeTimeline").style.transform = `translateX(${-scrollLeft}px)`;
+                });
+
+                document.getElementById("addKeyframeBtn").addEventListener("click", function () {
+                    // 기본값: 현재 재생시간, 각도 0, x, y=0, 크기=100
+                    let newKF = {
+                        id: "kf-" + Math.random().toString(36).substr(2, 9),
+                        time: currentTime,
+                        angle: 0,
+                        x: 0,
+                        y: 0,
+                        size: 100
+                    };
+                    keyframes.push(newKF);
+                    addKeyframeMarker(newKF);
+                });
+
+                function addKeyframeMarker(kf) {
+                    const timeline = document.getElementById("keyframeTimeline");
+                    const marker = document.createElement("div");
+                    marker.className = "keyframe-marker";
+                    marker.id = kf.id;
+                    marker.style.left = (kf.time * PIXELS_PER_SECOND) + "px";
+                    marker.title = `시간: ${kf.time.toFixed(2)}, 각도: ${kf.angle}°, x: ${kf.x}, y: ${kf.y}, 크기: ${kf.size}`;
+                    timeline.appendChild(marker);
+
+                    // 마커 클릭 시 토글로 선택/해제 처리
+                    marker.addEventListener("click", function (e) {
+                        e.stopPropagation();
+                        if (selectedKeyframe && selectedKeyframe.id === kf.id) {
+                            deselectKeyframe();
+                        } else {
+                            selectKeyframe(kf, marker);
+                        }
+                    });
+
+                    // 드래그 이벤트 처리
+                    marker.addEventListener("mousedown", function (e) {
+                        e.stopPropagation();
+                        draggingKeyframe = kf;
+                        keyframeDragOffset = e.offsetX;
+                        document.body.classList.add("no-select");
+                    });
+
+                    marker.addEventListener("contextmenu", function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showKeyframeContextMenu(e, kf, marker);
+                    });
+                }
+
+                function showKeyframeContextMenu(e, keyframe, marker) {
+                    // 기존에 열려있는 키프레임 컨텍스트 메뉴가 있으면 제거
+                    const existingMenu = document.querySelector('.keyframe-context-menu');
+                    if (existingMenu) {
+                        existingMenu.remove();
+                    }
+
+                    const menu = document.createElement("div");
+                    menu.className = "keyframe-context-menu";
+                    menu.style.position = "absolute";
+                    menu.style.left = e.pageX + "px";
+                    menu.style.top = e.pageY + "px";
+                    menu.style.backgroundColor = "#444";
+                    menu.style.border = "1px solid #666";
+                    menu.style.padding = "4px";
+                    menu.style.zIndex = 9999;
+
+                    // 복사 옵션
+                    const copyOption = document.createElement("div");
+                    copyOption.innerText = "복사";
+                    copyOption.style.padding = "4px 12px";
+                    copyOption.style.cursor = "pointer";
+                    copyOption.addEventListener("click", function () {
+                        copiedKeyframe = structuredClone(keyframe);
+                        menu.remove();
+                    });
+                    menu.appendChild(copyOption);
+
+                    // 붙여넣기 옵션
+                    const pasteOption = document.createElement("div");
+                    pasteOption.innerText = "붙여넣기";
+                    pasteOption.style.padding = "4px 12px";
+                    pasteOption.style.cursor = "pointer";
+                    pasteOption.addEventListener("click", function () {
+                        if (copiedKeyframe) {
+                            const newKf = Object.assign({}, copiedKeyframe);
+                            newKf.id = "kf-" + Math.random().toString(36).substr(2, 9);
+                            // 원본 키프레임보다 0.5초 오른쪽(나중 시간)으로 붙여넣기
+                            newKf.time += 0.5;
+                            keyframes.push(newKf);
+                            addKeyframeMarker(newKf);
+                        }
+                        menu.remove();
+                    });
+                    menu.appendChild(pasteOption);
+
+                    // 삭제 옵션
+                    const deleteOption = document.createElement("div");
+                    deleteOption.innerText = "삭제";
+                    deleteOption.style.padding = "4px 12px";
+                    deleteOption.style.cursor = "pointer";
+                    deleteOption.addEventListener("click", function () {
+                        // 배열에서 삭제
+                        keyframes = keyframes.filter(k => k.id !== keyframe.id);
+                        // DOM에서 키프레임 마커 제거
+                        if (marker.parentNode) {
+                            marker.parentNode.removeChild(marker);
+                        }
+                        // 선택된 키프레임이 삭제된 경우 해제
+                        if (selectedKeyframe && selectedKeyframe.id === keyframe.id) {
+                            deselectKeyframe();
+                        }
+                        menu.remove();
+                    });
+                    menu.appendChild(deleteOption);
+
+                    document.body.appendChild(menu);
+
+                    // 다른 곳 클릭 시 메뉴 제거
+                    document.addEventListener("click", function handler() {
+                        if (document.body.contains(menu)) {
+                            menu.remove();
+                        }
+                        document.removeEventListener("click", handler);
+                    }, { once: true });
+                }
+
+                // 타임프레임 영역 우클릭 시 붙여넣기 메뉴만 표시 (마커 위가 아니면)
+                document.getElementById("keyframeTimeline").addEventListener("contextmenu", function (e) {
+                    // 만약 우클릭 대상이 키프레임 마커라면 별도 메뉴가 이미 동작하도록 그냥 리턴
+                    if (e.target.classList.contains("keyframe-marker")) return;
+                    e.preventDefault();
+                    showTimelineContextMenu(e);
+                });
+
+                // 타임라인 우클릭 전용 컨텍스트 메뉴 함수 (붙여넣기 또는 붙여넣기 없음)
+                function showTimelineContextMenu(e) {
+                    // 기존 메뉴가 있다면 제거
+                    const existing = document.querySelector('.timeline-keyframe-context-menu');
+                    if (existing) existing.remove();
+
+                    const menu = document.createElement("div");
+                    menu.className = "timeline-keyframe-context-menu";
+                    menu.style.position = "absolute";
+                    menu.style.left = e.pageX + "px";
+                    menu.style.top = e.pageY + "px";
+                    menu.style.backgroundColor = "#444";
+                    menu.style.border = "1px solid #666";
+                    menu.style.padding = "4px";
+                    menu.style.zIndex = 9999;
+
+                    if (copiedKeyframe) {
+                        const pasteOption = document.createElement("div");
+                        pasteOption.innerText = "붙여넣기";
+                        pasteOption.style.padding = "4px 12px";
+                        pasteOption.style.cursor = "pointer";
+                        pasteOption.addEventListener("click", function () {
+                            const timeline = document.getElementById("keyframeTimeline");
+                            const rect = timeline.getBoundingClientRect();
+                            const PIXELS_PER_SECOND = 50; // 시간-픽셀 변환 상수 (필요시 조정)
+                            let pasteTime = (e.clientX - rect.left) / PIXELS_PER_SECOND;
+                            pasteTime += 0.5; // 오른쪽으로 0.5초 오프셋 추가
+                            const newKf = structuredClone(copiedKeyframe);
+                            newKf.id = "kf-" + Math.random().toString(36).substr(2, 9);
+                            newKf.time = pasteTime;
+                            keyframes.push(newKf);
+                            addKeyframeMarker(newKf);
+                            menu.remove();
+                        });
+                        menu.appendChild(pasteOption);
+                    } else {
+                        const noPasteOption = document.createElement("div");
+                        noPasteOption.innerText = "붙여넣기 없음";
+                        noPasteOption.style.padding = "4px 12px";
+                        noPasteOption.style.color = "#aaa"; // 비활성화된 느낌
+                        noPasteOption.style.cursor = "default";
+                        menu.appendChild(noPasteOption);
+                    }
+
+                    document.body.appendChild(menu);
+
+                    // 다른 곳 클릭 시 메뉴 제거
+                    document.addEventListener("click", function handler() {
+                        if (document.body.contains(menu)) menu.remove();
+                        document.removeEventListener("click", handler);
+                    }, { once: true });
+                }
+
+                // 키프레임 드래그 처리
+                document.addEventListener("mousemove", function (e) {
+                    if (draggingKeyframe) {
+                        const timeline = document.getElementById("keyframeTimeline");
+                        const rect = timeline.getBoundingClientRect();
+                        let newLeft = e.clientX - rect.left - keyframeDragOffset;
+                        newLeft = Math.max(0, newLeft);
+                        newLeft = Math.min(newLeft, totalDuration * PIXELS_PER_SECOND - 10);
+                        const marker = document.getElementById(draggingKeyframe.id);
+                        marker.style.left = newLeft + "px";
+                        draggingKeyframe.time = newLeft / PIXELS_PER_SECOND;
+                        marker.title = `시간: ${draggingKeyframe.time.toFixed(2)}, 각도: ${draggingKeyframe.angle}°, x: ${draggingKeyframe.x}, y: ${draggingKeyframe.y}, 크기: ${draggingKeyframe.size}`;
+                        if (selectedKeyframe && selectedKeyframe.id === draggingKeyframe.id) {
+                            document.getElementById("kfPropTime").value = draggingKeyframe.time.toFixed(2);
+                        }
+                    }
+                });
+                document.addEventListener("mouseup", function () {
+                    if (draggingKeyframe) {
+                        draggingKeyframe = null;
+                        document.body.classList.remove("no-select");
+                    }
+                });
+
+                document.addEventListener("click", function (e) {
+                    if (!e.target.closest('.keyframe-marker') && !e.target.closest('#keyframeProperties')) {
+                        deselectKeyframe();
+                    }
+                });
+
+                function selectKeyframe(kf, markerElem) {
+                    // 다른 요소(클립 등)의 선택 해제
+                    deselectClip();
+                    // 이전에 선택된 키프레임 해제
+                    deselectKeyframe();
+                    selectedKeyframe = kf;
+                    markerElem.classList.add("selected");
+                    document.getElementById("keyframeProperties").style.display = "block";
+                    document.getElementById("propertiesFields").style.display = "none";
+                    document.getElementById("noSelectionMessage").style.display = "none";
+                    document.getElementById("kfPropTime").value = kf.time.toFixed(2);
+                    document.getElementById("kfPropAngle").value = kf.angle;
+                    document.getElementById("kfPropX").value = kf.x;
+                    document.getElementById("kfPropY").value = kf.y;
+                    document.getElementById("kfPropSize").value = kf.size;
+                }
+                function deselectKeyframe() {
+                    if (selectedKeyframe) {
+                        const marker = document.getElementById(selectedKeyframe.id);
+                        if (marker) marker.classList.remove("selected");
+                        selectedKeyframe = null;
+                        document.getElementById("keyframeProperties").style.display = "none";
+                    }
+                }
+                // 키프레임 속성 입력값 변경 이벤트
+                document.getElementById("kfPropTime").addEventListener("input", function () {
+                    if (selectedKeyframe) {
+                        let newTime = parseFloat(this.value);
+                        if (!isNaN(newTime)) {
+                            selectedKeyframe.time = newTime;
+                            const marker = document.getElementById(selectedKeyframe.id);
+                            marker.style.left = (newTime * PIXELS_PER_SECOND) + "px";
+                            marker.title = `시간: ${selectedKeyframe.time.toFixed(2)}, 각도: ${selectedKeyframe.angle}°, x: ${selectedKeyframe.x}, y: ${selectedKeyframe.y}, 크기: ${selectedKeyframe.size}`;
+                        }
+                    }
+                });
+                document.getElementById("kfPropAngle").addEventListener("input", function () {
+                    if (selectedKeyframe) {
+                        selectedKeyframe.angle = parseFloat(this.value);
+                        const marker = document.getElementById(selectedKeyframe.id);
+                        marker.title = `시간: ${selectedKeyframe.time.toFixed(2)}, 각도: ${selectedKeyframe.angle}°, x: ${selectedKeyframe.x}, y: ${selectedKeyframe.y}, 크기: ${selectedKeyframe.size}`;
+                    }
+                });
+                document.getElementById("kfPropX").addEventListener("input", function () {
+                    if (selectedKeyframe) {
+                        selectedKeyframe.x = parseFloat(this.value);
+                        const marker = document.getElementById(selectedKeyframe.id);
+                        marker.title = `시간: ${selectedKeyframe.time.toFixed(2)}, 각도: ${selectedKeyframe.angle}°, x: ${selectedKeyframe.x}, y: ${selectedKeyframe.y}, 크기: ${selectedKeyframe.size}`;
+                    }
+                });
+                document.getElementById("kfPropY").addEventListener("input", function () {
+                    if (selectedKeyframe) {
+                        selectedKeyframe.y = parseFloat(this.value);
+                        const marker = document.getElementById(selectedKeyframe.id);
+                        marker.title = `시간: ${selectedKeyframe.time.toFixed(2)}, 각도: ${selectedKeyframe.angle}°, x: ${selectedKeyframe.x}, y: ${selectedKeyframe.y}, 크기: ${selectedKeyframe.size}`;
+                    }
+                });
+                document.getElementById("kfPropSize").addEventListener("input", function () {
+                    if (selectedKeyframe) {
+                        selectedKeyframe.size = parseFloat(this.value);
+                        const marker = document.getElementById(selectedKeyframe.id);
+                        marker.title = `시간: ${selectedKeyframe.time.toFixed(2)}, 각도: ${selectedKeyframe.angle}°, x: ${selectedKeyframe.x}, y: ${selectedKeyframe.y}, 크기: ${selectedKeyframe.size}`;
+                    }
+                });
+
                 document
                     .getElementById("timelineBody")
                     .addEventListener("contextmenu", function (e) {
@@ -4168,6 +4502,28 @@
                     .addEventListener("click", function (e) {
                         document.getElementById("bgMusicInput").click();
                     });
+                document.getElementById("addKeyframeBtn").addEventListener("click", function () {
+                    const time = parseFloat(document.getElementById("kfTime").value);
+                    const direction = document.getElementById("kfDirection").value;
+                    const x = parseFloat(document.getElementById("kfX").value);
+                    const y = parseFloat(document.getElementById("kfY").value);
+                    const size = parseFloat(document.getElementById("kfSize").value);
+
+                    let keyframe = { time, direction, x, y, size };
+                    keyframes.push(keyframe);
+
+                    // 키프레임 타임라인에 마커 추가 (좌측 위치는 시간에 따라 결정)
+                    const timeline = document.getElementById("keyframeTimeline");
+                    const marker = document.createElement("div");
+                    marker.className = "keyframe-marker";
+                    marker.style.position = "absolute";
+                    marker.style.left = (time * PIXELS_PER_SECOND) + "px";
+                    marker.style.width = "10px"; // 마커의 고정 폭 (필요에 따라 변경)
+                    marker.style.height = "100%";
+                    marker.style.backgroundColor = "yellow";
+                    marker.title = `시간: ${time}, 방향: ${direction}, x: ${x}, y: ${y}, 크기: ${size}`;
+                    timeline.appendChild(marker);
+                });
                 const previewBgInput =
                     document.getElementById("previewBgColor");
                 previewBgInput.addEventListener("input", function (e) {
@@ -4227,135 +4583,138 @@
                                 alert("복사에 실패했습니다.");
                             });
                     });
-                document
-                    .getElementById("exportFile")
-                    .addEventListener("click", async function () {
-                        let typoArrayData = [];
-                        document.getElementById("exportCode").textContent.split("\n").forEach((value) =>
-                            typoArrayData.push({ data: value })
-                        );
-                        const projectJSON = await fetch(
-                            "project.json"
-                        ).then((res) => res.json());
-                        let audioFileName = Array.from(
-                            { length: 32 },
-                            () =>
-                                "abcdefghijklmnopqrstuvwxyz0123456789"[
-                                Math.floor(
-                                    Math.random() *
-                                    "abcdefghijklmnopqrstuvwxyz0123456789"
-                                        .length
-                                )
-                                ]
-                        ).join("");
-                        projectJSON.variables[20].array = typoArrayData;
-                        if (bgAudio != null) {
-                            projectJSON.objects[0].sprite.sounds[0].duration =
-                                bgAudio.duration;
-                        }
-                        projectJSON.objects[0].sprite.sounds[0].filename =
-                            audioFileName;
-                        projectJSON.objects[0].sprite.sounds[0].fileurl = `temp/${audioFileName.slice(
-                            0,
-                            2
-                        )}/${audioFileName.slice(
-                            2,
-                            4
-                        )}/sound/${audioFileName}.mp3`;
-                        let tar = new tarball.TarWriter();
-                        tar.addFile(
-                            `temp/${audioFileName.slice(
-                                0,
-                                2
-                            )}/${audioFileName.slice(
-                                2,
-                                4
-                            )}/sound/${audioFileName}.mp3`,
-                            new File(
-                                [bgAudioBlob],
-                                `temp/${audioFileName.slice(
-                                    0,
-                                    2
-                                )}/${audioFileName.slice(
-                                    2,
-                                    4
-                                )}/sound/${audioFileName}.mp3`
-                            )
-                        );
-                        // 내보내기(Export) 이벤트 핸들러 내부(기존 mp3 관련 코드 이후)에 아래 코드를 추가합니다.
-                        if (!projectJSON.objects[1].sprite.pictures) {
-                            projectJSON.objects[1].sprite.pictures = [];
-                        }
-                        // exportFile 클릭 이벤트 핸들러 내부에서
-                        let imagePromises = [];
-                        for (let cid in clipsData) {
-                            let clip = clipsData[cid];
-                            if (clip.type === "image" && clip.imageFile) {
-                                // 32자리 랜덤 문자열로 이미지 파일명 생성
-                                let imageFileName = Array.from({ length: 32 }, () =>
-                                    "abcdefghijklmnopqrstuvwxyz0123456789"[
-                                    Math.floor(Math.random() * "abcdefghijklmnopqrstuvwxyz0123456789".length)
-                                    ]
-                                ).join("");
-                                let promise = new Promise((resolve) => {
-                                    let img = new Image();
-                                    img.onload = function () {
-                                        // 실제 이미지의 자연 너비와 높이 읽어오기
-                                        let width = img.naturalWidth;
-                                        let height = img.naturalHeight;
-                                        projectJSON.objects[1].sprite.pictures.push({
-                                            "fileurl": ``,
-                                            "dimension": {
-                                                "width": width,
-                                                "height": height,
-                                                "scaleX": 1,
-                                                "scaleY": 1
-                                            },
-                                            "filename": imageFileName,
-                                            "name": clip.imageFile.name,
-                                            "imageType": "png",
-                                        });
-                                        tar.addFile(
-                                            `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png`,
-                                            new File([clip.imageFile], `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png`)
-                                        );
-                                        resolve();
-                                    };
-                                    img.src = clip.imageURL;
-                                });
-                                imagePromises.push(promise);
-                            }
-                        }
-                        await Promise.all(imagePromises);
+                document.getElementById("exportFile").addEventListener("click", async function () {
+                    let typoArrayData = [];
+                    document.getElementById("exportCode").textContent.split("\n").forEach((value) =>
+                        typoArrayData.push({ data: value })
+                    );
+                    let cameraArrayData = [];
+                    document.getElementById("exportKeyframes").textContent.split("\n").forEach((value) =>
+                        cameraArrayData.push({ data: value })
+                    );
 
-                        tar.addFile(
-                            "temp/project.json",
-                            new File(
-                                [new Blob([JSON.stringify(projectJSON)])],
-                                "temp/project.json"
+                    // project.json 불러오기
+                    const projectJSON = await fetch("project.json").then((res) => res.json());
+
+                    // 오디오 파일 이름(랜덤 32자리) 생성
+                    let audioFileName = Array.from(
+                        { length: 32 },
+                        () =>
+                            "abcdefghijklmnopqrstuvwxyz0123456789"[
+                            Math.floor(
+                                Math.random() * "abcdefghijklmnopqrstuvwxyz0123456789".length
                             )
-                        );
-                        const imgData = await fetch("img.zip").then((res) =>
-                            res.blob()
-                        );
-                        const zipData = await new JSZip().loadAsync(
-                            imgData
-                        );
-                        console.log(zipData);
-                        for (const [fileName, zipFile] of Object.entries(
-                            zipData.files
-                        )) {
-                            if (!zipFile.dir) {
-                                const fileBlob = await zipFile.async(
-                                    "blob"
-                                );
-                                let file = new File([fileBlob], fileName);
-                                console.log(fileName);
-                                tar.addFile("temp" + "\\" + fileName, file);
-                            }
+                            ]
+                    ).join("");
+
+                    // projectJSON 수정
+                    projectJSON.variables[48].array = typoArrayData;
+                    projectJSON.variables[50].array = cameraArrayData;
+                    
+                    if (bgAudio != null) {
+                        projectJSON.objects[0].sprite.sounds[0].duration = bgAudio.duration;
+                    }
+                    projectJSON.objects[0].sprite.sounds[0].filename = audioFileName;
+                    projectJSON.objects[0].sprite.sounds[0].fileurl = `temp/${audioFileName.slice(
+                        0,
+                        2
+                    )}/${audioFileName.slice(2, 4)}/sound/${audioFileName}.mp3`;
+
+                    // TarWriter 생성
+                    let tar = new tarball.TarWriter();
+
+                    // 오디오 파일 추가(딜레이 예시)
+                    tar.addFile(
+                        `temp/${audioFileName.slice(0, 2)}/${audioFileName.slice(2, 4)}/sound/${audioFileName}.mp3`,
+                        new File(
+                            [bgAudioBlob],
+                            `temp/${audioFileName.slice(0, 2)}/${audioFileName.slice(2, 4)}/sound/${audioFileName}.mp3`
+                        )
+                    );
+                    // tar에 파일을 추가한 뒤 약간 쉬어준다.
+                    await new Promise((r) => setTimeout(r, 50));
+
+                    // 이미지가 저장될 배열이 없으면 초기화
+                    if (!projectJSON.objects[1].sprite.pictures) {
+                        projectJSON.objects[1].sprite.pictures = [];
+                    }
+
+                    // clipsData에 있는 이미지 파일을 tar에 추가
+                    let imagePromises = [];
+                    for (let cid in clipsData) {
+                        let clip = clipsData[cid];
+                        if (clip.type === "image" && clip.imageFile) {
+                            let imageFileName = Array.from({ length: 32 }, () =>
+                                "abcdefghijklmnopqrstuvwxyz0123456789"[
+                                Math.floor(Math.random() * "abcdefghijklmnopqrstuvwxyz0123456789".length)
+                                ]
+                            ).join("");
+
+                            let promise = new Promise((resolve) => {
+                                let img = new Image();
+                                img.onload = function () {
+                                    let width = img.naturalWidth;
+                                    let height = img.naturalHeight;
+
+                                    // project.json의 pictures 배열에 정보 추가
+                                    projectJSON.objects[1].sprite.pictures.push({
+                                        "fileurl": ``,
+                                        "dimension": {
+                                            "width": width,
+                                            "height": height,
+                                            "scaleX": 1,
+                                            "scaleY": 1
+                                        },
+                                        "filename": imageFileName,
+                                        "name": clip.imageFile.name,
+                                        "imageType": "png",
+                                    });
+
+                                    // 이미지 파일 tar에 추가
+                                    tar.addFile(
+                                        `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png`,
+                                        new File(
+                                            [clip.imageFile],
+                                            `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png`
+                                        )
+                                    );
+                                    resolve();
+                                };
+                                img.src = clip.imageURL;
+                            });
+                            imagePromises.push(promise);
                         }
-                        tar.download("project.ent");
-                    });
+                    }
+                    // 이미지 로드 완료 후 tar에 추가가 끝날 때까지 기다림
+                    await Promise.all(imagePromises);
+
+                    // project.json을 tar에 추가
+                    tar.addFile(
+                        "temp/project.json",
+                        new File([new Blob([JSON.stringify(projectJSON)])], "temp/project.json")
+                    );
+                    await new Promise((r) => setTimeout(r, 50));  // 딜레이 예시
+
+                    // img.zip 불러와서 tar에 추가
+                    const imgData = await fetch("img.zip").then((res) => res.blob());
+                    const zipData = await new JSZip().loadAsync(imgData);
+                    console.log(zipData);
+
+                    for (const [fileName, zipFile] of Object.entries(zipData.files)) {
+                        if (!zipFile.dir) {
+                            const fileBlob = await zipFile.async("blob");
+                            let file = new File([fileBlob], fileName);
+                            console.log(fileName);
+
+                            // zip 내부 파일도 tar에 넣기 (한 번에 너무 많이 넣지 않도록 조금씩 쉬어주기)
+                            tar.addFile("temp" + "\\" + fileName, file);
+                            await new Promise((r) => setTimeout(r, 50));  // ★ 여기가 중요(딜레이)
+                        }
+                    }
+
+                    // tar 파일로 다운로드
+                    tar.download("project.ent");
+                });
                 document
                     .querySelector(".preview-content")
                     .addEventListener("mousedown", function (e) {
