@@ -2730,7 +2730,7 @@
                 // - 카메라가 오른쪽으로 이동하면 월드(요소)는 왼쪽으로 이동하도록: translate(-cam.x, -cam.y)
                 // - 카메라 회전은 반대로: rotate(-cam.angle)
                 // - 카메라 확대(zoom in)은 요소들을 키우도록: scale(cam.scale)
-                const cameraTransform = `translate(${-cam.x}px, ${-cam.y}px) rotate(${-cam.angle}deg)`;
+                const cameraTransform = `translate(${-cam.x * cam.scale}px, ${-cam.y * cam.scale}px) rotate(${-cam.angle}deg)`;
                 const CameraScale = cam.scale
 
                 // t 시간에 활성화된 클립들을 모읍니다.
@@ -2764,7 +2764,7 @@
                         const sc = getValueAtTime(c.scale, localT, dur, c.ease.scale) / 50;
                         const rot = getValueAtTime(c.rotation, localT, dur, c.ease.rotation);
                         // 각 클립 자체의 transform (원래 요소의 위치, 회전, 스케일)
-                        const elementTransform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc * CameraScale})`;
+                        const elementTransform = `translate(-50%, -50%) translate(${xVal * CameraScale}px, ${yVal * CameraScale}px) rotate(${rot}deg) scale(${sc * CameraScale})`;
                         // 최종적으로 카메라의 역변환과 요소의 변환을 결합합니다.
                         const combinedTransform = cameraTransform + " " + elementTransform;
 
@@ -2939,7 +2939,7 @@
                             container.style.position = "absolute";
                             container.style.left = "50%";
                             container.style.top = "50%";
-                            const elementTransform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc * CameraScale})`;
+                            const elementTransform = `translate(-50%, -50%) translate(${xVal * CameraScale}px, ${yVal * CameraScale}px) rotate(${rot}deg) scale(${sc * CameraScale})`;
                             const combinedTransform = cameraTransform + " " + elementTransform;
                             container.style.transform = combinedTransform;
                             container.style.pointerEvents = "auto";
