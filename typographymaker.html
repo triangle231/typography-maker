@@ -1214,6 +1214,7 @@
             </button>
         </div>
     </div>
+
     <script src="https://rawcdn.githack.com/ankitrohatgi/tarballjs/refs/heads/master/tarball.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- 스크립트 -->
@@ -4584,79 +4585,108 @@
                             });
                     });
                 document.getElementById("exportFile").addEventListener("click", async function () {
-                    let typoArrayData = [];
-                    document.getElementById("exportCode").textContent.split("\n").forEach((value) =>
-                        typoArrayData.push({ data: value })
-                    );
-                    let cameraArrayData = [];
-                    document.getElementById("exportKeyframes").textContent.split("\n").forEach((value) =>
-                        cameraArrayData.push({ data: value })
-                    );
+                    // 동적으로 로딩 오버레이 생성
+                    let overlay = document.createElement("div");
+                    overlay.id = "exportLoading";
+                    overlay.style.position = "fixed";
+                    overlay.style.top = "0";
+                    overlay.style.left = "0";
+                    overlay.style.width = "100%";
+                    overlay.style.height = "100%";
+                    overlay.style.background = "rgba(0,0,0,0.8)";
+                    overlay.style.zIndex = "10000";
+                    overlay.style.color = "#fff";
+                    overlay.style.fontSize = "24px";
+                    overlay.style.display = "flex";
+                    overlay.style.alignItems = "center";
+                    overlay.style.justifyContent = "center";
 
-                    // project.json 불러오기
-                    const projectJSON = await fetch("project.json").then((res) => res.json());
+                    let loadingTextEl = document.createElement("div");
+                    loadingTextEl.id = "exportLoadingText";
+                    loadingTextEl.textContent = "내보내는 중... 0%";
+                    overlay.appendChild(loadingTextEl);
+                    document.body.appendChild(overlay);
 
-                    // 오디오 파일 이름(랜덤 32자리) 생성
-                    let audioFileName = Array.from(
-                        { length: 32 },
-                        () =>
-                            "abcdefghijklmnopqrstuvwxyz0123456789"[
-                            Math.floor(
-                                Math.random() * "abcdefghijklmnopqrstuvwxyz0123456789".length
+                    function updateProgress(percent) {
+                        loadingTextEl.textContent = `내보내는 중... ${percent}%`;
+                    }
+
+                    try {
+                        updateProgress(0);
+
+                        let typoArrayData = [];
+                        document.getElementById("exportCode").textContent.split("\n").forEach((value) =>
+                            typoArrayData.push({ data: value })
+                        );
+                        let cameraArrayData = [];
+                        document.getElementById("exportKeyframes").textContent.split("\n").forEach((value) =>
+                            cameraArrayData.push({ data: value })
+                        );
+
+                        // project.json 불러오기
+                        const projectJSON = await fetch("project.json").then((res) => res.json());
+
+                        // 오디오 파일 이름(랜덤 32자리) 생성
+                        let audioFileName = Array.from(
+                            { length: 32 },
+                            () =>
+                                "abcdefghijklmnopqrstuvwxyz0123456789"[
+                                Math.floor(Math.random() * "abcdefghijklmnopqrstuvwxyz0123456789".length)
+                                ]
+                        ).join("");
+
+                        // projectJSON 수정
+                        projectJSON.variables[47].array = typoArrayData;
+                        projectJSON.variables[49].array = cameraArrayData;
+
+                        if (bgAudio) {
+                            projectJSON.objects[0].sprite.sounds[0].duration = bgAudio.duration;
+                        }
+                        projectJSON.objects[0].sprite.sounds[0].filename = audioFileName;
+                        projectJSON.objects[0].sprite.sounds[0].fileurl = `temp/${audioFileName.slice(0, 2)}/${audioFileName.slice(2, 4)}/sound/${audioFileName}.mp3`;
+
+                        // TarWriter 생성
+                        let tar = new tarball.TarWriter();
+
+                        updateProgress(10);
+
+                        // 오디오 파일 추가
+                        tar.addFile(
+                            `temp/${audioFileName.slice(0, 2)}/${audioFileName.slice(2, 4)}/sound/${audioFileName}.mp3`,
+                            new File(
+                                [bgAudioBlob],
+                                `temp/${audioFileName.slice(0, 2)}/${audioFileName.slice(2, 4)}/sound/${audioFileName}.mp3`
                             )
-                            ]
-                    ).join("");
+                        );
+                        updateProgress(20);
+                        await new Promise((r) => setTimeout(r, 50));
 
-                    // projectJSON 수정
-                    projectJSON.variables[48].array = typoArrayData;
-                    projectJSON.variables[50].array = cameraArrayData;
-                    
-                    if (bgAudio != null) {
-                        projectJSON.objects[0].sprite.sounds[0].duration = bgAudio.duration;
-                    }
-                    projectJSON.objects[0].sprite.sounds[0].filename = audioFileName;
-                    projectJSON.objects[0].sprite.sounds[0].fileurl = `temp/${audioFileName.slice(
-                        0,
-                        2
-                    )}/${audioFileName.slice(2, 4)}/sound/${audioFileName}.mp3`;
+                        // projectJSON 내 picture 배열 초기화
+                        if (!projectJSON.objects[1].sprite.pictures) {
+                            projectJSON.objects[1].sprite.pictures = [];
+                        }
 
-                    // TarWriter 생성
-                    let tar = new tarball.TarWriter();
-
-                    // 오디오 파일 추가(딜레이 예시)
-                    tar.addFile(
-                        `temp/${audioFileName.slice(0, 2)}/${audioFileName.slice(2, 4)}/sound/${audioFileName}.mp3`,
-                        new File(
-                            [bgAudioBlob],
-                            `temp/${audioFileName.slice(0, 2)}/${audioFileName.slice(2, 4)}/sound/${audioFileName}.mp3`
-                        )
-                    );
-                    // tar에 파일을 추가한 뒤 약간 쉬어준다.
-                    await new Promise((r) => setTimeout(r, 50));
-
-                    // 이미지가 저장될 배열이 없으면 초기화
-                    if (!projectJSON.objects[1].sprite.pictures) {
-                        projectJSON.objects[1].sprite.pictures = [];
-                    }
-
-                    // clipsData에 있는 이미지 파일을 tar에 추가
-                    let imagePromises = [];
-                    for (let cid in clipsData) {
-                        let clip = clipsData[cid];
-                        if (clip.type === "image" && clip.imageFile) {
+                        // 이미지 클립들 처리 (진행률 업데이트: 20% ~ 50%)
+                        let imagePromises = [];
+                        let imageClips = [];
+                        for (let cid in clipsData) {
+                            let clip = clipsData[cid];
+                            if (clip.type === "image" && clip.imageFile) {
+                                imageClips.push(clip);
+                            }
+                        }
+                        for (let idx = 0; idx < imageClips.length; idx++) {
+                            let clip = imageClips[idx];
                             let imageFileName = Array.from({ length: 32 }, () =>
                                 "abcdefghijklmnopqrstuvwxyz0123456789"[
                                 Math.floor(Math.random() * "abcdefghijklmnopqrstuvwxyz0123456789".length)
                                 ]
                             ).join("");
-
                             let promise = new Promise((resolve) => {
                                 let img = new Image();
                                 img.onload = function () {
                                     let width = img.naturalWidth;
                                     let height = img.naturalHeight;
-
-                                    // project.json의 pictures 배열에 정보 추가
                                     projectJSON.objects[1].sprite.pictures.push({
                                         "fileurl": ``,
                                         "dimension": {
@@ -4669,8 +4699,6 @@
                                         "name": clip.imageFile.name,
                                         "imageType": "png",
                                     });
-
-                                    // 이미지 파일 tar에 추가
                                     tar.addFile(
                                         `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png`,
                                         new File(
@@ -4678,43 +4706,56 @@
                                             `temp/${imageFileName.slice(0, 2)}/${imageFileName.slice(2, 4)}/image/${imageFileName}.png`
                                         )
                                     );
+                                    // 이미지 하나 처리할 때마다 진행률 업데이트 (비율에 맞게)
+                                    let progressVal = 20 + Math.round(((idx + 1) / imageClips.length) * 30);
+                                    updateProgress(progressVal);
                                     resolve();
                                 };
                                 img.src = clip.imageURL;
                             });
                             imagePromises.push(promise);
                         }
-                    }
-                    // 이미지 로드 완료 후 tar에 추가가 끝날 때까지 기다림
-                    await Promise.all(imagePromises);
+                        await Promise.all(imagePromises);
 
-                    // project.json을 tar에 추가
-                    tar.addFile(
-                        "temp/project.json",
-                        new File([new Blob([JSON.stringify(projectJSON)])], "temp/project.json")
-                    );
-                    await new Promise((r) => setTimeout(r, 50));  // 딜레이 예시
+                        updateProgress(55);
 
-                    // img.zip 불러와서 tar에 추가
-                    const imgData = await fetch("img.zip").then((res) => res.blob());
-                    const zipData = await new JSZip().loadAsync(imgData);
-                    console.log(zipData);
+                        // project.json 추가
+                        tar.addFile(
+                            "temp/project.json",
+                            new File([new Blob([JSON.stringify(projectJSON)])], "temp/project.json")
+                        );
+                        updateProgress(65);
+                        await new Promise((r) => setTimeout(r, 50));
 
-                    for (const [fileName, zipFile] of Object.entries(zipData.files)) {
-                        if (!zipFile.dir) {
+                        // img.zip 불러와서 tar에 추가 (진행률 업데이트: 65% ~ 90%)
+                        const imgData = await fetch("img.zip").then((res) => res.blob());
+                        const zipData = await new JSZip().loadAsync(imgData);
+                        let zipFiles = Object.entries(zipData.files).filter(([name, file]) => !file.dir);
+                        let totalZipFiles = zipFiles.length;
+                        let processedZipFiles = 0;
+                        for (const [fileName, zipFile] of zipFiles) {
                             const fileBlob = await zipFile.async("blob");
-                            let file = new File([fileBlob], fileName);
-                            console.log(fileName);
-
-                            // zip 내부 파일도 tar에 넣기 (한 번에 너무 많이 넣지 않도록 조금씩 쉬어주기)
-                            tar.addFile("temp" + "\\" + fileName, file);
-                            await new Promise((r) => setTimeout(r, 50));  // ★ 여기가 중요(딜레이)
+                            let fileObj = new File([fileBlob], fileName);
+                            tar.addFile("temp" + "\\" + fileName, fileObj);
+                            processedZipFiles++;
+                            let progressVal = 65 + Math.round((processedZipFiles / totalZipFiles) * 25);
+                            updateProgress(progressVal);
+                            await new Promise((r) => setTimeout(r, 50)); // 딜레이
                         }
-                    }
 
-                    // tar 파일로 다운로드
-                    tar.download("project.ent");
+                        updateProgress(95);
+                        // tar 다운로드 (완료 전까지 진행률 95%로 유지)
+                        tar.download("project.ent");
+                        updateProgress(100);
+                        await new Promise((r) => setTimeout(r, 300));
+                    } catch (error) {
+                        console.error("내보내기 중 오류 발생:", error);
+                    } finally {
+                        // 로딩 오버레이 삭제
+                        overlay.remove();
+                    }
                 });
+
                 document
                     .querySelector(".preview-content")
                     .addEventListener("mousedown", function (e) {
