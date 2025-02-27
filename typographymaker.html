@@ -2938,7 +2938,7 @@
                             container.style.position = "absolute";
                             container.style.left = "50%";
                             container.style.top = "50%";
-                            const elementTransform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc * CameraScale}})`;
+                            const elementTransform = `translate(-50%, -50%) translate(${xVal}px, ${yVal}px) rotate(${rot}deg) scale(${sc * CameraScale})`;
                             const combinedTransform = cameraTransform + " " + elementTransform;
                             container.style.transform = combinedTransform;
                             container.style.pointerEvents = "auto";
@@ -4608,8 +4608,8 @@
                     ).join("");
 
                     // projectJSON 수정
-                    projectJSON.variables[47].array = typoArrayData;
-                    projectJSON.variables[49].array = cameraArrayData;
+                    projectJSON.variables[48].array = typoArrayData;
+                    projectJSON.variables[50].array = cameraArrayData;
                     
                     if (bgAudio != null) {
                         projectJSON.objects[0].sprite.sounds[0].duration = bgAudio.duration;
