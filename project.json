@@ -17,21 +17,20 @@
                             "scaleX": 0.5,
                             "scaleY": 0.5
                         },
-                        "fileurl": "/lib/entry-js/images/_1x1.png",
-                        "thumbUrl": "",
+                        "fileurl": "./bower_components/entry-js/images/_1x1.png",
                         "name": "새 그림",
-                        "imageType": "png"
+                        "imageType": "png",
+                        "thumbUrl": ""
                     }
                 ],
                 "sounds": [
                     {
-                        "_id": null,
                         "duration": 0,
                         "ext": ".mp3",
                         "id": "olzn",
                         "filename": "p213oe02lzlxu7bfioimxidswo85xxq5",
-                        "fileurl": null,
-                        "name": "bgm.mp3"
+                        "name": "bgm.mp3",
+                        "fileurl": "temp/p2/13/sound/p213oe02lzlxu7bfioimxidswo85xxq5.mp3"
                     }
                 ]
             },
@@ -70,9 +69,9 @@
                             "scaleY": 1
                         },
                         "filename": "75123f25m73bbecq0006b09cffa9if0z",
-                        "fileurl": null,
                         "name": "빨강",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/75/12/image/75123f25m73bbecq0006b09cffa9if0z.svg"
                     }
                 ],
                 "sounds": []
@@ -140,7 +139,6 @@
             "sprite": {
                 "pictures": [
                     {
-                        "_id": null,
                         "id": "8cko",
                         "dimension": {
                             "width": 80,
@@ -149,9 +147,9 @@
                             "scaleY": 1
                         },
                         "filename": "5123f25cm73bbecq0006b09cffa9jlmj",
-                        "fileurl": null,
                         "name": "빨강",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/51/23/image/5123f25cm73bbecq0006b09cffa9jlmj.svg"
                     },
                     {
                         "id": "yfjc",
@@ -162,12 +160,11 @@
                             "scaleY": 1
                         },
                         "filename": "123f25cdm73bbecq0006b09cffa9k9dj",
-                        "fileurl": null,
                         "name": "파랑",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/12/3f/image/123f25cdm73bbecq0006b09cffa9k9dj.svg"
                     },
                     {
-                        "_id": null,
                         "id": "akzk",
                         "dimension": {
                             "width": 80,
@@ -176,12 +173,11 @@
                             "scaleY": 1
                         },
                         "filename": "23f25cd8m73bbecq0006b09cffa9l1h5",
-                        "fileurl": null,
                         "name": "보라",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/23/f2/image/23f25cd8m73bbecq0006b09cffa9l1h5.svg"
                     },
                     {
-                        "_id": null,
                         "id": "lqfo",
                         "dimension": {
                             "width": 80,
@@ -190,12 +186,11 @@
                             "scaleY": 1
                         },
                         "filename": "3f25cd88m73bbecq0006b09cffa9lj3i",
-                        "fileurl": null,
                         "name": "초록",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/3f/25/image/3f25cd88m73bbecq0006b09cffa9lj3i.svg"
                     },
                     {
-                        "_id": null,
                         "id": "5f3q",
                         "dimension": {
                             "width": 80,
@@ -204,12 +199,11 @@
                             "scaleY": 1
                         },
                         "filename": "f25cd884m73bbecq0006b09cffa9m35u",
-                        "fileurl": null,
                         "name": "주황",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/f2/5c/image/f25cd884m73bbecq0006b09cffa9m35u.svg"
                     },
                     {
-                        "_id": null,
                         "id": "l674",
                         "dimension": {
                             "width": 80,
@@ -218,9 +212,9 @@
                             "scaleY": 1
                         },
                         "filename": "25cd8841m73bbecq0006b09cffa9mmpe",
-                        "fileurl": null,
                         "name": "노랑",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/25/cd/image/25cd8841m73bbecq0006b09cffa9mmpe.svg"
                     }
                 ],
                 "sounds": []
@@ -260,12 +254,11 @@
                             "scaleY": 1
                         },
                         "filename": "5cd8841bm73bbecq0006b09cffa9natg",
-                        "fileurl": null,
                         "name": "빨강",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/5c/d8/image/5cd8841bm73bbecq0006b09cffa9natg.svg"
                     },
                     {
-                        "_id": null,
                         "id": "cf9e",
                         "dimension": {
                             "width": 80,
@@ -274,12 +267,11 @@
                             "scaleY": 1
                         },
                         "filename": "cd8841b9m73bbecq0006b09cffa9ns8g",
-                        "fileurl": null,
                         "name": "보라",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/cd/88/image/cd8841b9m73bbecq0006b09cffa9ns8g.svg"
                     },
                     {
-                        "_id": null,
                         "id": "xi1g",
                         "dimension": {
                             "width": 80,
@@ -288,12 +280,11 @@
                             "scaleY": 1
                         },
                         "filename": "d8841b93m73bbecq0006b09cffa9oer1",
-                        "fileurl": null,
                         "name": "파랑",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/d8/84/image/d8841b93m73bbecq0006b09cffa9oer1.svg"
                     },
                     {
-                        "_id": null,
                         "id": "speu",
                         "dimension": {
                             "width": 80,
@@ -302,12 +293,11 @@
                             "scaleY": 1
                         },
                         "filename": "8841b931m73bbecq0006b09cffa9oy3t",
-                        "fileurl": null,
                         "name": "초록",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/88/41/image/8841b931m73bbecq0006b09cffa9oy3t.svg"
                     },
                     {
-                        "_id": null,
                         "id": "8fj9",
                         "dimension": {
                             "width": 80,
@@ -316,12 +306,11 @@
                             "scaleY": 1
                         },
                         "filename": "841b9314m73bbecq0006b09cffa9pkvg",
-                        "fileurl": null,
                         "name": "주황",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/84/1b/image/841b9314m73bbecq0006b09cffa9pkvg.svg"
                     },
                     {
-                        "_id": null,
                         "id": "niud",
                         "dimension": {
                             "width": 80,
@@ -330,9 +319,9 @@
                             "scaleY": 1
                         },
                         "filename": "41b93141m73bbecq0006b09cffa9q6jp",
-                        "fileurl": null,
                         "name": "노랑",
-                        "imageType": "svg"
+                        "imageType": "svg",
+                        "fileurl": "temp/41/b9/image/41b93141m73bbecq0006b09cffa9q6jp.svg"
                     }
                 ],
                 "sounds": []
