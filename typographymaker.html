@@ -2730,7 +2730,7 @@
                 // - 카메라가 오른쪽으로 이동하면 월드(요소)는 왼쪽으로 이동하도록: translate(-cam.x, -cam.y)
                 // - 카메라 회전은 반대로: rotate(-cam.angle)
                 // - 카메라 확대(zoom in)은 요소들을 키우도록: scale(cam.scale)
-                const cameraTransform = `translate(${-cam.x * cam.scale}px, ${-cam.y * cam.scale}px) rotate(${-cam.angle}deg)`;
+                const cameraTransform = `translate(${-cam.x * cam.scale * 1.6}px, ${-cam.y * cam.scale * 1.6}px) rotate(${-cam.angle}deg)`;
                 const CameraScale = cam.scale
 
                 // t 시간에 활성화된 클립들을 모읍니다.
